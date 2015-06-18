@@ -11,7 +11,7 @@ var (
 )
 
 func init() {
-	flag.StringVar(&crontabPath, "file", "crontab")
+	flag.StringVar(&crontabPath, "file", "crontab", "crontab file path")
 }
 
 func main() {
