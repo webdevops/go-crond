@@ -5,6 +5,7 @@ import (
 	"errors"
 	"io"
 	"regexp"
+	"strings"
 )
 
 const (
@@ -36,14 +37,16 @@ func (p *Parser) Parse() (*Runner, error) {
 	if err := p.parseLines(); err != nil {
 		return nil, err
 	}
-
-	return nil, nil
+	return p.runner, nil
 }
 
 func (p *Parser) parseLines() error {
 	scanner := bufio.NewScanner(p.reader)
 	for scanner.Scan() {
-		line := scanner.Text()
+		line := strings.TrimSpace(scanner.Text())
+		if strings.HasPrefix(line, "#") {
+			continue
+		}
 		if p.rp.MatchString(line) == true {
 			m := p.rp.FindStringSubmatch(line)
 			p.runner.Add(m[1], m[2])
