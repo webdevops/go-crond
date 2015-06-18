@@ -1,11 +1,57 @@
 package main
 
+import (
+	"bufio"
+	"errors"
+	"io"
+	"regexp"
+)
+
+const (
+	LINE_RE = `^(\S+\s+\S+\s+\S+\s+\S+\s+\S+)\s+(.+)$`
+)
+
 type Parser struct {
+	rp     *regexp.Regexp
+	reader io.Reader
+	runner *Runner
 }
 
-func NewParser(path string) (*Parser, error) {
-	var err error
-	p := &Parser{}
+func NewParser(reader io.Reader) (*Parser, error) {
+	rp, err := regexp.Compile(LINE_RE)
+	if err != nil {
+		return nil, err
+	}
 
-	return p, err
+	p := &Parser{
+		rp:     rp,
+		reader: reader,
+		runner: NewRunner(),
+	}
+
+	return p, nil
+}
+
+func (p *Parser) Parse() (*Runner, error) {
+	if err := p.parseLines(); err != nil {
+		return nil, err
+	}
+
+	return nil, nil
+}
+
+func (p *Parser) parseLines() error {
+	scanner := bufio.NewScanner(p.reader)
+	for scanner.Scan() {
+		line := scanner.Text()
+		if p.rp.MatchString(line) == true {
+			m := p.rp.FindStringSubmatch(line)
+			p.runner.Add(m[1], m[2])
+		}
+	}
+
+	if p.runner.Len() > 0 {
+		return nil
+	}
+	return errors.New("No parse line")
 }
