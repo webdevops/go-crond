@@ -41,8 +41,8 @@ func (r *Runner) Stop() {
 
 func (r *Runner) cmdFunc(cmd string) func() {
 	cmdFunc := func() {
-		out, err := exec.Command(cmd).CombinedOutput()
-		log.Printf("cmd:%v out:%v err:%v", cmd, out, err)
+		out, err := exec.Command("bash", "-c", cmd).CombinedOutput()
+		log.Printf("cmd:%v out:%v err:%v", cmd, string(out), err)
 	}
 	return cmdFunc
 }
