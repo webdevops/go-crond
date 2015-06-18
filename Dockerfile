@@ -6,4 +6,3 @@ ENV GOPATH /go/src/go-cron/Godeps/_workspace:$GOPATH
 RUN go install -v 
 
 ENTRYPOINT ["go-cron"]
-CMD ["-h"]
