@@ -5,20 +5,25 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"runtime"
 	"sync"
 	"syscall"
 )
 
 var (
 	crontabPath string
+	numCPU      int
 )
 
 func init() {
 	flag.StringVar(&crontabPath, "file", "crontab", "crontab file path")
+	flag.IntVar(&numCPU, "cpu", runtime.NumCPU(), "maximum number of CPUs")
 }
 
 func main() {
 	flag.Parse()
+
+	runtime.GOMAXPROCS(numCPU)
 
 	file, err := os.Open(crontabPath)
 	if err != nil {
