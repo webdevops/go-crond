@@ -9,14 +9,14 @@
 - https://registry.hub.docker.com/u/anarcher/go-cron/
 
 ```
-$docker run anarcher/go-cron -h                                                                                                  2 ↵
+$docker run anarcher/go-cron -h                            
 Usage of go-cron:
     -cpu=4: maximum number of CPUs
     -file="crontab": crontab file path
 ```
 
 ```
-$ docker run go-cron -file=crontab                                                                                                2 ↵
+$ docker run go-cron -file=crontab                                                              
 2015/06/18 07:53:38 Add cron job spec:*/1 * * * * cmd:echo "hello world!" err:<nil>
 2015/06/18 07:53:38 Add cron job spec:*/1 * * * * cmd:echo "hello" ; sleep 1 ; echo "world" err:<nil>
 2015/06/18 07:53:38 Start runner
