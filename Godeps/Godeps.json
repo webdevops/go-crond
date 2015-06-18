@@ -5,6 +5,11 @@
 		{
 			"ImportPath": "github.com/namsral/flag",
 			"Rev": "bd57b3fc9ada8271ff812ba54f938fe72749d969"
+		},
+		{
+			"ImportPath": "github.com/robfig/cron",
+			"Comment": "v1-2-g67823cd",
+			"Rev": "67823cd24dece1b04cced3a0a0b3ca2bc84d875e"
 		}
 	]
 }
