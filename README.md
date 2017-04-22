@@ -30,3 +30,20 @@ Application Options:
 ```
 
 Crontab files can be added as arguments or automatic included by using eg. `--include-crond=path/`
+
+### Examples
+
+Run crond with 3 crontab files:
+
+    go-crond crontab1 crontab2 crontab3
+
+
+Run crond with auto include of /etc/cron.d and script execution of hourly, weekly, daily and monthly:
+
+    go-crond \
+        --include=/etc/cron.d \
+        --include-hourly=/etc/cron.hourly \
+        --include-weekly=/etc/cron.weekly \
+        --include-daily=/etc/cron.daily
+        --include-monthly=/etc/cron.monthly
+
