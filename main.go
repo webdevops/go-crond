@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"os/signal"
@@ -12,15 +13,23 @@ import (
     flags "github.com/jessevdk/go-flags"
 )
 
+const (
+    Author  = "webdevops.io"
+    Version = "0.1.0"
+)
+
 var opts struct {
-    Processes           int       `long:"processes"           description:"Number of parallel executions" default:"1"`
-    DefaultUser         string    `long:"default-user"        description:"Default user"                  default:"root"`
-    IncludeCronD        []string  `long:"include-crond"       description:"Include files in directory as system crontabs (with user)"`
-    IncludeCron15Min    []string  `long:"include-15min"       description:"Include files in directory for 15 min execution"`
-    IncludeCronHourly   []string  `long:"include-hourly"      description:"Include files in directory for hourly execution"`
-    IncludeCronDaily    []string  `long:"include-daily"       description:"Include files in directory for daily execution"`
-    IncludeCronWeekly   []string  `long:"include-weekly"      description:"Include files in directory for weekly execution"`
-    IncludeCronMonthly  []string  `long:"include-monthly"     description:"Include files in directory for monthly execution"`
+    Processes               int       `           long:"processes"           description:"Number of parallel executions" default:"1"`
+    DefaultUser             string    `           long:"default-user"        description:"Default user"                  default:"root"`
+    IncludeCronD            []string  `           long:"include-crond"       description:"Include files in directory as system crontabs (with user)"`
+    IncludeCron15Min        []string  `           long:"include-15min"       description:"Include files in directory for 15 min execution"`
+    IncludeCronHourly       []string  `           long:"include-hourly"      description:"Include files in directory for hourly execution"`
+    IncludeCronDaily        []string  `           long:"include-daily"       description:"Include files in directory for daily execution"`
+    IncludeCronWeekly       []string  `           long:"include-weekly"      description:"Include files in directory for weekly execution"`
+    IncludeCronMonthly      []string  `           long:"include-monthly"     description:"Include files in directory for monthly execution"`
+    ShowVersion             bool      `short:"V"  long:"version"             description:"show version and exit"`
+    ShowHelp                bool      `short:"h"  long:"help"                description:"show this help message"`
+
 }
 
 var argparser *flags.Parser
@@ -33,6 +42,19 @@ func initArgParser() ([]string) {
     // check if there is an parse error
     if err != nil {
         logFatalErrorAndExit(err, 1)
+    }
+
+    // --version
+    if (opts.ShowVersion) {
+        fmt.Println(fmt.Sprintf("go-crond version %s", Version))
+        fmt.Println(fmt.Sprintf("Copyright (C) 2017 %s", Author))
+        os.Exit(0)
+    }
+
+    // --help
+    if (opts.ShowHelp) {
+        argparser.WriteHelp(os.Stdout)
+        os.Exit(1)
     }
 
     return args
@@ -173,6 +195,8 @@ func collectCrontabs(args []string) []CrontabEntry {
 func main() {
     initLogger()
     args := initArgParser()
+
+    LoggerInfo.Printf("Starting version %s", Version)
 
     var wg sync.WaitGroup
 
