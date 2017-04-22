@@ -2,20 +2,25 @@ package main
 
 import (
 	"bufio"
-	"errors"
 	"io"
 	"regexp"
 	"strings"
 )
 
 const (
-	LINE_RE = `^(\S+\s+\S+\s+\S+\s+\S+\s+\S+)\s+(.+)$`
+    //          ----spec----------------------------------    --user--   -cmd-
+	LINE_RE = `^\s*([^@\s]+\s+\S+\s+\S+\s+\S+|@every\s+\S+)\s+([^\s]+)\s+(.+)$`
 )
+
+type CrontabEntry struct {
+    Spec    string
+    User    string
+    Command string
+}
 
 type Parser struct {
 	rp     *regexp.Regexp
 	reader io.Reader
-	runner *Runner
 }
 
 func NewParser(reader io.Reader) (*Parser, error) {
@@ -27,34 +32,43 @@ func NewParser(reader io.Reader) (*Parser, error) {
 	p := &Parser{
 		rp:     rp,
 		reader: reader,
-		runner: NewRunner(),
 	}
 
 	return p, nil
 }
 
-func (p *Parser) Parse() (*Runner, error) {
-	if err := p.parseLines(); err != nil {
-		return nil, err
-	}
-	return p.runner, nil
+func (p *Parser) Parse() ([]CrontabEntry) {
+    entries := p.parseLines()
+
+	return entries
 }
 
-func (p *Parser) parseLines() error {
+func (p *Parser) parseLines() ([]CrontabEntry) {
+    var entries []CrontabEntry
+
 	scanner := bufio.NewScanner(p.reader)
 	for scanner.Scan() {
 		line := strings.TrimSpace(scanner.Text())
-		if strings.HasPrefix(line, "#") {
+
+        // comment line
+        if strings.HasPrefix(line, "#") {
 			continue
 		}
+
 		if p.rp.MatchString(line) == true {
 			m := p.rp.FindStringSubmatch(line)
-			p.runner.Add(m[1], m[2])
+
+            crontabSpec := strings.TrimSpace(m[1])
+            crontabUser := strings.TrimSpace(m[2])
+            crontabCommand := strings.TrimSpace(m[3])
+
+            if ! strings.HasPrefix(crontabSpec, "@") {
+                crontabSpec = "0 " + crontabSpec
+            }
+
+            entries = append(entries, CrontabEntry{crontabSpec, crontabUser, crontabCommand})
 		}
 	}
 
-	if p.runner.Len() > 0 {
-		return nil
-	}
-	return errors.New("No parse line")
+    return entries
 }
