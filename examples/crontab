@@ -1,0 +1,4 @@
+# comment
+* * * * mblaschke echo "hello world!"
+* * * * mblaschke echo "hello" ; sleep 1 ; echo "world"
+@every 1m mblaschke echo "hello" ; sleep 1 ; echo "world"
