@@ -19,7 +19,7 @@ Usage:
 Application Options:
       --processes=       Number of parallel executions (default: 1)
       --default-user=    Default user (default: root)
-      --include-crond=   Include files in directory as system crontabs (with user)
+      --include=         Include files in directory as system crontabs (with user)
       --include-15min=   Include files in directory for 15 min execution
       --include-hourly=  Include files in directory for hourly execution
       --include-daily=   Include files in directory for daily execution

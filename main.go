@@ -21,7 +21,7 @@ const (
 var opts struct {
     Processes               int       `           long:"processes"           description:"Number of parallel executions" default:"1"`
     DefaultUser             string    `           long:"default-user"        description:"Default user"                  default:"root"`
-    IncludeCronD            []string  `           long:"include-crond"       description:"Include files in directory as system crontabs (with user)"`
+    IncludeCronD            []string  `           long:"include"             description:"Include files in directory as system crontabs (with user)"`
     IncludeCron15Min        []string  `           long:"include-15min"       description:"Include files in directory for 15 min execution"`
     IncludeCronHourly       []string  `           long:"include-hourly"      description:"Include files in directory for hourly execution"`
     IncludeCronDaily        []string  `           long:"include-daily"       description:"Include files in directory for daily execution"`
