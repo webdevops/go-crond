@@ -22,3 +22,8 @@ _testmain.go
 *.exe
 *.test
 *.prof
+
+*.6
+/go-crond
+/build/
+/.idea
