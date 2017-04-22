@@ -1,3 +1,0 @@
-# comment
-*/1 * * * * echo "hello world!"
-*/1 * * * * echo "hello" ; sleep 1 ; echo "world"
