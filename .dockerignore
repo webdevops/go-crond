@@ -1,0 +1,8 @@
+build
+examples
+go-crond
+Dockerfile
+.git
+.editorconfig
+.gitignore
+.idea
