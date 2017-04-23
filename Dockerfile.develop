@@ -1,0 +1,11 @@
+FROM golang:alpine
+
+RUN apk --no-cache add git
+
+COPY . /go/src/go-crond
+WORKDIR /go/src/go-crond
+
+RUN go get
+RUN go build
+
+CMD ["./go-crond"]
