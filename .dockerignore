@@ -1,5 +1,4 @@
 build
-examples
 go-crond
 Dockerfile
 .git

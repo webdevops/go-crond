@@ -1,11 +1,16 @@
 FROM golang:alpine
 
+RUN apk --no-cache add vim nano
 RUN apk --no-cache add git
+
+
+RUN go get github.com/robfig/cron
+RUN go get github.com/jessevdk/go-flags
 
 COPY . /go/src/go-crond
 WORKDIR /go/src/go-crond
 
-RUN go get
-RUN go build
+RUN go build \
+    && cp -a go-crond /usr/local/bin
 
 CMD ["./go-crond"]
