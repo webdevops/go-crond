@@ -1,4 +1,5 @@
 # comment
-* * * * mblaschke echo "hello world!"
-* * * * mblaschke echo "hello" ; sleep 1 ; echo "world"
-@every 1m mblaschke echo "hello" ; sleep 1 ; echo "world"
+* * * * root sleep 5 && id >> /tmp/test-1
+* * * * root sleep 5 && id >> /tmp/test-2
+@every 1m guest id >> /tmp/test-3
+@every 1m guest env >> /tmp/test-4

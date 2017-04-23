@@ -22,7 +22,7 @@ func NewRunner() *Runner {
 
 func (r *Runner) Add(spec string, cmd string) error {
 	err := r.cron.AddFunc(spec, r.cmdFunc(cmd, func(execCmd *exec.Cmd) bool {
-        LoggerInfo.Printf("cronjob: cmd:%v", cmd)
+        LoggerInfo.Printf("cronjob: spec:%v cmd:%v", spec, cmd)
         return true
     }))
 
@@ -38,7 +38,7 @@ func (r *Runner) Add(spec string, cmd string) error {
 
 func (r *Runner) AddWithUser(spec string, username string, cmd string) error {
 	err := r.cron.AddFunc(spec, r.cmdFunc(cmd, func(execCmd *exec.Cmd) bool {
-        LoggerInfo.Printf("cronjob: cmd:%v usr:%v", cmd, username)
+        LoggerInfo.Printf("cronjob: spec:%v usr:%v cmd:%v", spec, username, cmd)
 
         u, err := user.Lookup(username)
         if err != nil {
@@ -48,13 +48,13 @@ func (r *Runner) AddWithUser(spec string, username string, cmd string) error {
 
         userId, err := strconv.ParseUint(u.Uid, 10, 32)
         if err != nil {
-            LoggerError.Printf("Cannot convert user to id: %v", err)
+            LoggerError.Printf("Cannot convert user to id:%v", err)
             return false
         }
 
         groupId, err := strconv.ParseUint(u.Gid, 10, 32)
         if err != nil {
-            LoggerError.Printf("Cannot convert group to id: %v", err)
+            LoggerError.Printf("Cannot convert group to id:%v", err)
             return false
         }
 

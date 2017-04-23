@@ -10,6 +10,7 @@ import (
 	"syscall"
     "path/filepath"
     "os/user"
+    "strings"
     flags "github.com/jessevdk/go-flags"
 )
 
@@ -19,17 +20,17 @@ const (
 )
 
 var opts struct {
-    Processes               int       `           long:"processes"           description:"Number of parallel executions" default:"1"`
-    DefaultUser             string    `           long:"default-user"        description:"Default user"                  default:"root"`
-    IncludeCronD            []string  `           long:"include"             description:"Include files in directory as system crontabs (with user)"`
-    IncludeCron15Min        []string  `           long:"include-15min"       description:"Include files in directory for 15 min execution"`
-    IncludeCronHourly       []string  `           long:"include-hourly"      description:"Include files in directory for hourly execution"`
-    IncludeCronDaily        []string  `           long:"include-daily"       description:"Include files in directory for daily execution"`
-    IncludeCronWeekly       []string  `           long:"include-weekly"      description:"Include files in directory for weekly execution"`
-    IncludeCronMonthly      []string  `           long:"include-monthly"     description:"Include files in directory for monthly execution"`
-    ShowVersion             bool      `short:"V"  long:"version"             description:"show version and exit"`
-    ShowHelp                bool      `short:"h"  long:"help"                description:"show this help message"`
-
+    Processes                 int       `           long:"processes"            description:"Number of parallel executions" default:"1"`
+    DefaultUser               string    `           long:"default-user"         description:"Default user"                  default:"root"`
+    IncludeCronD              []string  `           long:"include"              description:"Include files in directory as system crontabs (with user)"`
+    RunParts                  []string  `           long:"run-parts"            description:"Include files in directory with dynamic time execution (time-spec:path)"`
+    RunParts1m                []string  `           long:"run-parts-1min"       description:"Include files in directory every minute execution (run-part)"`
+    RunPartsHourly            []string  `           long:"run-parts-hourly"     description:"Include files in directory every hour execution (run-part)"`
+    RunPartsDaily             []string  `           long:"run-parts-daily"      description:"Include files in directory every day execution (run-part)"`
+    RunPartsWeekly            []string  `           long:"run-parts-weekly"     description:"Include files in directory every week execution (run-part)"`
+    RunPartsMonthly           []string  `           long:"run-parts-monthly"    description:"Include files in directory every month execution (run-part)"`
+    ShowVersion               bool      `short:"V"  long:"version"              description:"show version and exit"`
+    ShowHelp                  bool      `short:"h"  long:"help"                 description:"show this help message"`
 }
 
 var argparser *flags.Parser
@@ -74,17 +75,17 @@ func logFatalErrorAndExit(err error, exitCode int) {
 }
 
 func checkIfFileIsValid(f os.FileInfo, path string) bool {
-    if ! f.Mode().IsRegular() {
+    if f.Mode().IsRegular() {
+        if f.Mode().Perm() & 0022 == 0 {
+            return true
+        } else {
+            LoggerInfo.Printf("Ignoring file with wrong modes (not xx22) %s\n", path)
+        }
+    } else {
         LoggerInfo.Printf("Ignoring non regular file %s\n", path)
-        return false
     }
 
-    if f.Mode().Perm() & 0022 != 0 {
-        LoggerInfo.Printf("Ignoring file with wrong modes (not xx22) %s\n", path)
-        return false
-    }
-
-    return true
+    return false
 }
 
 func findFilesInPaths(pathlist []string, callback func(os.FileInfo, string)) {
@@ -92,7 +93,11 @@ func findFilesInPaths(pathlist []string, callback func(os.FileInfo, string)) {
         filepath.Walk(pathlist[i], func(path string, f os.FileInfo, err error) error {
             path, _ = filepath.Abs(path)
 
-            if ! checkIfFileIsValid(f, path) {
+            if f.IsDir() {
+                return nil
+            }
+
+            if checkIfFileIsValid(f, path) {
                 callback(f, path)
             }
 
@@ -105,6 +110,8 @@ func findExecutabesInPathes(pathlist []string, callback func(os.FileInfo, string
     findFilesInPaths(pathlist, func(f os.FileInfo, path string) {
         if f.Mode().IsRegular() && (f.Mode().Perm() & 0100 != 0) {
             callback(f, path)
+        } else {
+            LoggerInfo.Printf("Ignoring non exectuable file %s\n", path)
         }
     })
 }
@@ -154,37 +161,58 @@ func collectCrontabs(args []string) []CrontabEntry {
         })
     }
 
-    // --include-15min
-    if len(opts.IncludeCron15Min) >= 1 {
-        findExecutabesInPathes(opts.IncludeCron15Min, func(f os.FileInfo, path string) {
-            ret = append(ret, CrontabEntry{"@every 15m", opts.DefaultUser, path})
+    // --run-parts
+    if len(opts.RunParts) >= 1 {
+        for i := range opts.RunParts {
+            runPart := opts.RunParts[i]
+
+            if strings.Contains(runPart, ":") {
+                split := strings.SplitN(runPart, ":", 2)
+                cronSpec, cronPath := split[0], split[1]
+
+                var cronPaths []string
+                cronPaths = append(cronPaths, cronPath)
+
+                findExecutabesInPathes(cronPaths, func(f os.FileInfo, path string) {
+                    ret = append(ret, CrontabEntry{"@every " + cronSpec, opts.DefaultUser, path})
+                })
+            } else {
+                LoggerError.Printf("Ignoring --run-parts because of missing time spec: %s\n", runPart)
+            }
+        }
+    }
+
+    // --run-parts-minute
+    if len(opts.RunParts1m) >= 1 {
+        findExecutabesInPathes(opts.RunParts1m, func(f os.FileInfo, path string) {
+            ret = append(ret, CrontabEntry{"@every 1m", opts.DefaultUser, path})
         })
     }
 
-    // --include-hourly
-    if len(opts.IncludeCronHourly) >= 1 {
-        findExecutabesInPathes(opts.IncludeCronHourly, func(f os.FileInfo, path string) {
+    // --run-parts-hourly
+    if len(opts.RunPartsHourly) >= 1 {
+        findExecutabesInPathes(opts.RunPartsHourly, func(f os.FileInfo, path string) {
             ret = append(ret, CrontabEntry{"@hourly", opts.DefaultUser, path})
         })
     }
 
-    // --include-daily
-    if len(opts.IncludeCronDaily) >= 1 {
-        findExecutabesInPathes(opts.IncludeCronDaily, func(f os.FileInfo, path string) {
+    // --run-parts-daily
+    if len(opts.RunPartsDaily) >= 1 {
+        findExecutabesInPathes(opts.RunPartsDaily, func(f os.FileInfo, path string) {
             ret = append(ret, CrontabEntry{"@daily", opts.DefaultUser, path})
         })
     }
 
-    // --include-weekly
-    if len(opts.IncludeCronWeekly) >= 1 {
-        findExecutabesInPathes(opts.IncludeCronWeekly, func(f os.FileInfo, path string) {
+    // --run-parts-weekly
+    if len(opts.RunPartsWeekly) >= 1 {
+        findExecutabesInPathes(opts.RunPartsWeekly, func(f os.FileInfo, path string) {
             ret = append(ret, CrontabEntry{"@weekly", opts.DefaultUser, path})
         })
     }
 
-    // --include-monthly
-    if len(opts.IncludeCronMonthly) >= 1 {
-        findExecutabesInPathes(opts.IncludeCronMonthly, func(f os.FileInfo, path string) {
+    // --run-parts-monthly
+    if len(opts.RunPartsMonthly) >= 1 {
+        findExecutabesInPathes(opts.RunPartsMonthly, func(f os.FileInfo, path string) {
             ret = append(ret, CrontabEntry{"@monthly", opts.DefaultUser, path})
         })
     }
