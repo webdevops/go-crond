@@ -7,6 +7,12 @@ ALL = \
 	$(foreach suffix,linux osx,\
 		build/go-crond-$(arch)-$(suffix)))
 
+docker:
+	docker build . -t webdevops/go-crond
+
+docker-dev:
+	docker build -f Dockerfile.develop . -t webdevops/go-crond:develop
+
 all: test build
 
 build: clean test $(ALL)
