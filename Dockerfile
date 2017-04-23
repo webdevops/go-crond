@@ -7,7 +7,8 @@ WORKDIR /go/src/go-crond
 RUN apk --no-cache add --virtual .gocrond-deps git \
     && go get \
     && go build \
-    && rm -rf /go/src/github.com/ \
+    && mv go-crond /usr/local/bin \
+    && rm -rf /go/src/ \
     && apk del .gocrond-deps
 
-CMD ["./go-crond"]
+CMD ["go-crond"]
