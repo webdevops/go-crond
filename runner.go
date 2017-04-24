@@ -6,6 +6,7 @@ import (
 	"os/user"
 	"syscall"
 	"strconv"
+	"strings"
 )
 
 type Runner struct {
@@ -21,7 +22,13 @@ func NewRunner() *Runner {
 }
 
 func (r *Runner) Add(spec string, cmd string) error {
-	err := r.cron.AddFunc(spec, r.cmdFunc(cmd, func(execCmd *exec.Cmd) bool {
+
+    cronSpec := spec
+    if ! strings.HasPrefix(spec, "@") {
+        cronSpec = "0 " + spec
+    }
+
+	err := r.cron.AddFunc(cronSpec, r.cmdFunc(cmd, func(execCmd *exec.Cmd) bool {
         LoggerInfo.Printf("cronjob: spec:%v cmd:%v", spec, cmd)
         return true
     }))
@@ -37,7 +44,13 @@ func (r *Runner) Add(spec string, cmd string) error {
 }
 
 func (r *Runner) AddWithUser(spec string, username string, cmd string) error {
-	err := r.cron.AddFunc(spec, r.cmdFunc(cmd, func(execCmd *exec.Cmd) bool {
+
+    cronSpec := spec
+    if ! strings.HasPrefix(spec, "@") {
+        cronSpec = "0 " + spec
+    }
+
+	err := r.cron.AddFunc(cronSpec, r.cmdFunc(cmd, func(execCmd *exec.Cmd) bool {
         LoggerInfo.Printf("cronjob: spec:%v usr:%v cmd:%v", spec, username, cmd)
 
         u, err := user.Lookup(username)

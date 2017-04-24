@@ -8,8 +8,8 @@ import (
 )
 
 const (
-    //          ----spec----------------------------------    --user--   -cmd-
-	LINE_RE = `^\s*([^@\s]+\s+\S+\s+\S+\s+\S+|@every\s+\S+)\s+([^\s]+)\s+(.+)$`
+    //          ----spec-----------------------------------------    --user--  -cmd-
+	LINE_RE = `^\s*([^@\s]+\s+\S+\s+\S+\s+\S+\s+\S+|@every\s+\S+)\s+([^\s]+)\s+(.+)$`
 )
 
 type CrontabEntry struct {
@@ -61,10 +61,6 @@ func (p *Parser) parseLines() ([]CrontabEntry) {
             crontabSpec := strings.TrimSpace(m[1])
             crontabUser := strings.TrimSpace(m[2])
             crontabCommand := strings.TrimSpace(m[3])
-
-            if ! strings.HasPrefix(crontabSpec, "@") {
-                crontabSpec = "0 " + crontabSpec
-            }
 
             entries = append(entries, CrontabEntry{crontabSpec, crontabUser, crontabCommand})
 		}
