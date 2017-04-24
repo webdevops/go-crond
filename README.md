@@ -10,9 +10,14 @@ Cron daemon implemented in Golang
 
 Inspired by https://github.com/anarcher/go-cron
 
+Using https://godoc.org/github.com/robfig/cron
+
+
 ## Features
 
-- crontab (with user) and run-parts support
+- system crontab (with username inside)
+- user crontabs (without user inside)
+- run-parts support
 - Logging to STDOUT and STDERR (instead of sending mails)
 - Keep current environment (eg. for usage in Docker containers)
 
@@ -41,9 +46,14 @@ Crontab files can be added as arguments or automatic included by using eg. `--in
 
 ### Examples
 
-Run crond with 3 crontab files:
+Run crond with a system crontab:
 
-    go-crond crontab1 crontab2 crontab3
+    go-crond examples/crontab
+
+
+Run crond with user crontabs (without user in it) under specific users:
+
+    go-crond root:examples/crontab-root guest:examples/crontab-guest
 
 
 Run crond with auto include of /etc/cron.d and script execution of hourly, weekly, daily and monthly:
