@@ -23,12 +23,13 @@ var opts struct {
     Processes                 int       `           long:"processes"            description:"Number of parallel executions" default:"1"`
     DefaultUser               string    `           long:"default-user"         description:"Default user"                  default:"root"`
     IncludeCronD              []string  `           long:"include"              description:"Include files in directory as system crontabs (with user)"`
-    RunParts                  []string  `           long:"run-parts"            description:"Include files in directory with dynamic time execution (time-spec:path)"`
-    RunParts1m                []string  `           long:"run-parts-1min"       description:"Include files in directory every minute execution (run-part)"`
-    RunPartsHourly            []string  `           long:"run-parts-hourly"     description:"Include files in directory every hour execution (run-part)"`
-    RunPartsDaily             []string  `           long:"run-parts-daily"      description:"Include files in directory every day execution (run-part)"`
-    RunPartsWeekly            []string  `           long:"run-parts-weekly"     description:"Include files in directory every week execution (run-part)"`
-    RunPartsMonthly           []string  `           long:"run-parts-monthly"    description:"Include files in directory every month execution (run-part)"`
+    RunParts                  []string  `           long:"run-parts"            description:"Execute files in directory with custom spec (like run-parts; spec-units:ns,us,s,m,h; format:time-spec:path; eg:10s,1m,1h30m)"`
+    RunParts1m                []string  `           long:"run-parts-1min"       description:"Execute files in directory every beginning minute (like run-parts)"`
+    RunParts15m               []string  `           long:"run-parts-15min"      description:"Execute files in directory every beginning 15 minutes (like run-parts)"`
+    RunPartsHourly            []string  `           long:"run-parts-hourly"     description:"Execute files in directory every beginning hour (like run-parts)"`
+    RunPartsDaily             []string  `           long:"run-parts-daily"      description:"Execute files in directory every beginning day (like run-parts)"`
+    RunPartsWeekly            []string  `           long:"run-parts-weekly"     description:"Execute files in directory every beginning week (like run-parts)"`
+    RunPartsMonthly           []string  `           long:"run-parts-monthly"    description:"Execute files in directory every beginning month (like run-parts)"`
     ShowVersion               bool      `short:"V"  long:"version"              description:"show version and exit"`
     ShowHelp                  bool      `short:"h"  long:"help"                 description:"show this help message"`
 }
@@ -182,10 +183,17 @@ func collectCrontabs(args []string) []CrontabEntry {
         }
     }
 
-    // --run-parts-minute
+    // --run-parts-1min
     if len(opts.RunParts1m) >= 1 {
         findExecutabesInPathes(opts.RunParts1m, func(f os.FileInfo, path string) {
             ret = append(ret, CrontabEntry{"@every 1m", opts.DefaultUser, path})
+        })
+    }
+
+    // --run-parts-15min
+    if len(opts.RunParts15m) >= 1 {
+        findExecutabesInPathes(opts.RunParts15m, func(f os.FileInfo, path string) {
+            ret = append(ret, CrontabEntry{"0,15,30,45 * * * *", opts.DefaultUser, path})
         })
     }
 
