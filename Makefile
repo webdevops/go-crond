@@ -13,6 +13,9 @@ docker:
 docker-dev:
 	docker build -f Dockerfile.develop . -t webdevops/go-crond:develop
 
+docker-run-dev: docker-dev
+	docker run -ti --rm webdevops/go-crond:develop sh
+
 all: test build
 
 build: clean test $(ALL)
