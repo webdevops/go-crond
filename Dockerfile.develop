@@ -1,8 +1,8 @@
 FROM golang:alpine
 
-RUN apk --no-cache add vim nano
-RUN apk --no-cache add git
-
+RUN apk --no-cache add vim nano bash git \
+    && echo go-crond examples/crontab >> /root/.ash_history \
+    && echo go-crond --system-defaults >> /root/.ash_history
 
 RUN go get github.com/robfig/cron
 RUN go get github.com/jessevdk/go-flags
