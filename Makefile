@@ -1,6 +1,7 @@
 SOURCE = $(wildcard *.go)
 TAG ?= $(shell git describe --tags)
 GOBUILD = go build -ldflags '-w'
+.PHONY: docker docker-dev docker-run-dev all build test clean release
 
 ALL = \
 	$(foreach arch,64 32,\
