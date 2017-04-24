@@ -1,7 +1,6 @@
 package main
 
 import (
-	"github.com/robfig/cron"
 	"fmt"
 	"os"
 	"os/exec"
@@ -9,6 +8,7 @@ import (
 	"syscall"
 	"strconv"
 	"strings"
+    "github.com/robfig/cron"
 )
 
 type Runner struct {
@@ -29,7 +29,8 @@ func (r *Runner) Add(cronjob CrontabEntry) error {
     }
 
 	err := r.cron.AddFunc(cronSpec, r.cmdFunc(cronjob, func(execCmd *exec.Cmd) bool {
-        LoggerInfo.Printf("cronjob: spec:%v cmd:%v env:%v", cronjob.Spec, cronjob.Command, cronjob.Env)
+        // before exec callback
+        LoggerVerbose.Printf("cronjob: spec:%v cmd:%v env:%v", cronjob.Spec, cronjob.Command, cronjob.Env)
         return true
     }))
 
@@ -50,7 +51,8 @@ func (r *Runner) AddWithUser(cronjob CrontabEntry) error {
     }
 
 	err := r.cron.AddFunc(cronSpec, r.cmdFunc(cronjob, func(execCmd *exec.Cmd) bool {
-        LoggerInfo.Printf("cronjob: spec:%v usr:%v cmd:%v env:%v", cronjob.Spec, cronjob.User, cronjob.Command, cronjob.Env)
+        // before exec callback
+        LoggerVerbose.Printf("cronjob: spec:%v usr:%v cmd:%v env:%v", cronjob.Spec, cronjob.User, cronjob.Command, cronjob.Env)
 
         // lookup username
         u, err := user.Lookup(cronjob.User)

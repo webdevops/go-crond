@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"io/ioutil"
 	"os"
 	"os/signal"
 	"runtime"
@@ -35,6 +36,7 @@ var opts struct {
     RunPartsDaily             []string  `           long:"run-parts-daily"      description:"Execute files in directory every beginning day (like run-parts)"`
     RunPartsWeekly            []string  `           long:"run-parts-weekly"     description:"Execute files in directory every beginning week (like run-parts)"`
     RunPartsMonthly           []string  `           long:"run-parts-monthly"    description:"Execute files in directory every beginning month (like run-parts)"`
+    Verbose                   bool      `short:"v"  long:"verbose"              description:"verbose mode"`
     ShowVersion               bool      `short:"V"  long:"version"              description:"show version and exit"`
     ShowHelp                  bool      `short:"h"  long:"help"                 description:"show this help message"`
 }
@@ -68,10 +70,17 @@ func initArgParser() ([]string) {
 }
 
 var LoggerInfo *log.Logger
+var LoggerVerbose *log.Logger
 var LoggerError *log.Logger
 func initLogger() {
     LoggerInfo = log.New(os.Stdout, "go-crond: ", 0)
     LoggerError = log.New(os.Stderr, "go-crond: ", 0)
+
+    if opts.Verbose {
+        LoggerVerbose = log.New(os.Stdout, "go-crond: ", 0)
+    } else {
+        LoggerVerbose = log.New(ioutil.Discard, "go-crond: ", 0)
+    }
 }
 
 func findFilesInPaths(pathlist []string, callback func(os.FileInfo, string)) {
@@ -299,8 +308,9 @@ func includeSystemDefaults() []CrontabEntry {
 }
 
 func main() {
-    initLogger()
     args := initArgParser()
+    initLogger()
+
 
     LoggerInfo.Printf("Starting version %s", Version)
 
