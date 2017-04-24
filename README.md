@@ -10,6 +10,12 @@ Cron daemon implemented in Golang
 
 Inspired by https://github.com/anarcher/go-cron
 
+## Features
+
+- crontab (with user) and run-parts support
+- Logging to STDOUT and STDERR (instead of sending mails)
+- Keep current environment (eg. for usage in Docker containers)
+
 ## Usage
 
 ```
