@@ -19,10 +19,15 @@ const (
     Version = "0.1.0"
 )
 
+const (
+    CRONTAB_WITH_USERNAME = ""
+)
+
 var opts struct {
     Processes                 int       `           long:"processes"            description:"Number of parallel executions" default:"1"`
     DefaultUser               string    `           long:"default-user"         description:"Default user"                  default:"root"`
     IncludeCronD              []string  `           long:"include"              description:"Include files in directory as system crontabs (with user)"`
+    UseSystemDefaults         bool      `           long:"system-defaults"      description:"Include standard paths for distribution"`
     RunParts                  []string  `           long:"run-parts"            description:"Execute files in directory with custom spec (like run-parts; spec-units:ns,us,s,m,h; format:time-spec:path; eg:10s,1m,1h30m)"`
     RunParts1m                []string  `           long:"run-parts-1min"       description:"Execute files in directory every beginning minute (like run-parts)"`
     RunParts15m               []string  `           long:"run-parts-15min"      description:"Execute files in directory every beginning 15 minutes (like run-parts)"`
@@ -69,26 +74,6 @@ func initLogger() {
     LoggerError = log.New(os.Stderr, "go-crond: ", 0)
 }
 
-// Log error object as message
-func logFatalErrorAndExit(err error, exitCode int) {
-    LoggerError.Fatalf("ERROR: %s\n", err)
-    os.Exit(exitCode)
-}
-
-func checkIfFileIsValid(f os.FileInfo, path string) bool {
-    if f.Mode().IsRegular() {
-        if f.Mode().Perm() & 0022 == 0 {
-            return true
-        } else {
-            LoggerInfo.Printf("Ignoring file with wrong modes (not xx22) %s\n", path)
-        }
-    } else {
-        LoggerInfo.Printf("Ignoring non regular file %s\n", path)
-    }
-
-    return false
-}
-
 func findFilesInPaths(pathlist []string, callback func(os.FileInfo, string)) {
     for i := range pathlist {
         filepath.Walk(pathlist[i], func(path string, f os.FileInfo, err error) error {
@@ -117,13 +102,51 @@ func findExecutabesInPathes(pathlist []string, callback func(os.FileInfo, string
     })
 }
 
-func parseCrontab(path string) []CrontabEntry {
+func includePathsForCrontabs(paths []string, username string) []CrontabEntry {
+    var ret []CrontabEntry
+    findFilesInPaths(paths, func(f os.FileInfo, path string) {
+        entries := parseCrontab(path, username)
+        ret = append(ret, entries...)
+    })
+    return ret
+}
+
+func includePathForCrontabs(path string, username string) []CrontabEntry {
+    var ret []CrontabEntry
+    var paths []string = []string{path}
+
+    findFilesInPaths(paths, func(f os.FileInfo, path string) {
+        entries := parseCrontab(path, username)
+        ret = append(ret, entries...)
+    })
+    return ret
+}
+
+func includeRunPartsDirectories(paths []string, spec string) []CrontabEntry {
+    var ret []CrontabEntry
+    findExecutabesInPathes(paths, func(f os.FileInfo, path string) {
+        ret = append(ret, CrontabEntry{Spec: spec, User: opts.DefaultUser, Command: path})
+    })
+    return ret
+}
+
+func includeRunPartsDirectory(path string, spec string) []CrontabEntry {
+    var ret []CrontabEntry
+    var paths []string = []string{path}
+
+    findExecutabesInPathes(paths, func(f os.FileInfo, path string) {
+        ret = append(ret, CrontabEntry{Spec: spec, User: opts.DefaultUser, Command: path})
+    })
+    return ret
+}
+
+func parseCrontab(path string, username string) []CrontabEntry {
 	file, err := os.Open(path)
 	if err != nil {
 		LoggerError.Fatalf("crontab path: %v err:%v", path, err)
 	}
 
-	parser, err := NewParser(file)
+	parser, err := NewParser(file, username)
 	if err != nil {
 		LoggerError.Fatalf("Parser read err: %v", err)
 	}
@@ -138,28 +161,24 @@ func collectCrontabs(args []string) []CrontabEntry {
 
     // args: crontab files as normal arguments
     for i := range args {
-        crontabFile, err := filepath.Abs(args[i])
-        if err != nil {
-            LoggerError.Fatalf("Invalid file: %v", err)
+        crontabPath := args[i]
+        crontabUser := CRONTAB_WITH_USERNAME
+
+        if strings.Contains(crontabPath, ":") {
+            split := strings.SplitN(crontabPath, ":", 2)
+            crontabUser, crontabPath = split[0], split[1]
         }
 
-        f, err := os.Lstat(crontabFile)
-        if err != nil {
-            LoggerError.Fatalf("File stats failed: %v", err)
-        }
-        if checkIfFileIsValid(f, crontabFile) {
-            entries := parseCrontab(crontabFile)
-
+        crontabAbsPath, f := fileGetAbsolutePath(crontabPath)
+        if checkIfFileIsValid(f, crontabAbsPath) {
+            entries := parseCrontab(crontabAbsPath, crontabUser)
             ret = append(ret, entries...)
         }
     }
 
     // --include-crond
     if len(opts.IncludeCronD) >= 1 {
-        findFilesInPaths(opts.IncludeCronD, func(f os.FileInfo, path string) {
-            entries := parseCrontab(path)
-            ret = append(ret, entries...)
-        })
+        ret = append(ret, includePathsForCrontabs(opts.IncludeCronD, CRONTAB_WITH_USERNAME)...)
     }
 
     // --run-parts
@@ -171,12 +190,9 @@ func collectCrontabs(args []string) []CrontabEntry {
                 split := strings.SplitN(runPart, ":", 2)
                 cronSpec, cronPath := split[0], split[1]
 
-                var cronPaths []string
-                cronPaths = append(cronPaths, cronPath)
+                cronSpec = fmt.Sprintf("@every %s", cronSpec)
 
-                findExecutabesInPathes(cronPaths, func(f os.FileInfo, path string) {
-                    ret = append(ret, CrontabEntry{"@every " + cronSpec, opts.DefaultUser, path})
-                })
+                ret = append(ret, includeRunPartsDirectory(cronPath, cronSpec)...)
             } else {
                 LoggerError.Printf("Ignoring --run-parts because of missing time spec: %s\n", runPart)
             }
@@ -185,44 +201,98 @@ func collectCrontabs(args []string) []CrontabEntry {
 
     // --run-parts-1min
     if len(opts.RunParts1m) >= 1 {
-        findExecutabesInPathes(opts.RunParts1m, func(f os.FileInfo, path string) {
-            ret = append(ret, CrontabEntry{"@every 1m", opts.DefaultUser, path})
-        })
+        ret = append(ret, includeRunPartsDirectories(opts.RunParts1m, "@every 1m")...)
     }
 
     // --run-parts-15min
     if len(opts.RunParts15m) >= 1 {
-        findExecutabesInPathes(opts.RunParts15m, func(f os.FileInfo, path string) {
-            ret = append(ret, CrontabEntry{"0,15,30,45 * * * *", opts.DefaultUser, path})
-        })
+        ret = append(ret, includeRunPartsDirectories(opts.RunParts15m, "*/15 * * * *")...)
     }
 
     // --run-parts-hourly
     if len(opts.RunPartsHourly) >= 1 {
-        findExecutabesInPathes(opts.RunPartsHourly, func(f os.FileInfo, path string) {
-            ret = append(ret, CrontabEntry{"@hourly", opts.DefaultUser, path})
-        })
+        ret = append(ret, includeRunPartsDirectories(opts.RunPartsHourly, "@hourly")...)
     }
 
     // --run-parts-daily
     if len(opts.RunPartsDaily) >= 1 {
-        findExecutabesInPathes(opts.RunPartsDaily, func(f os.FileInfo, path string) {
-            ret = append(ret, CrontabEntry{"@daily", opts.DefaultUser, path})
-        })
+        ret = append(ret, includeRunPartsDirectories(opts.RunPartsDaily, "@daily")...)
     }
 
     // --run-parts-weekly
     if len(opts.RunPartsWeekly) >= 1 {
-        findExecutabesInPathes(opts.RunPartsWeekly, func(f os.FileInfo, path string) {
-            ret = append(ret, CrontabEntry{"@weekly", opts.DefaultUser, path})
-        })
+        ret = append(ret, includeRunPartsDirectories(opts.RunPartsWeekly, "@weekly")...)
     }
 
     // --run-parts-monthly
     if len(opts.RunPartsMonthly) >= 1 {
-        findExecutabesInPathes(opts.RunPartsMonthly, func(f os.FileInfo, path string) {
-            ret = append(ret, CrontabEntry{"@monthly", opts.DefaultUser, path})
-        })
+        ret = append(ret, includeRunPartsDirectories(opts.RunPartsMonthly, "@monthly")...)
+    }
+
+    if opts.UseSystemDefaults {
+        ret = append(ret, includeSystemDefaults()...)
+    }
+
+    return ret
+}
+
+func includeSystemDefaults() []CrontabEntry {
+    var ret []CrontabEntry
+
+    // ----------------------
+    // Alpine
+    // ----------------------
+    if checkIfFileExistsAndOwnedByRoot("/etc/alpine-release") {
+        LoggerInfo.Println(" --> detected Alpine family, using distribution defaults")
+
+        if checkIfDirectoryExists("/etc/crontabs") {
+            ret = append(ret, includePathForCrontabs("/etc/crontabs", opts.DefaultUser)...)
+        }
+
+        return ret
+    }
+
+    // ----------------------
+    // RedHat
+    // ----------------------
+    if checkIfFileExistsAndOwnedByRoot("/etc/redhat-release") {
+        LoggerInfo.Println(" --> detected RedHat family, using distribution defaults")
+
+        if checkIfFileExists("/etc/crontabs") {
+            ret = append(ret, includePathForCrontabs("/etc/crontabs", CRONTAB_WITH_USERNAME)...)
+        }
+
+        if checkIfDirectoryExists("/etc/cron.d") {
+            ret = append(ret, includePathForCrontabs("/etc/cron.d", CRONTAB_WITH_USERNAME)...)
+        }
+
+        return ret
+    }
+
+    // ----------------------
+    // SuSE
+    // ----------------------
+    if checkIfFileExistsAndOwnedByRoot("/etc/SuSE-release") {
+        LoggerInfo.Println(" --> detected SuSE family, using distribution defaults")
+
+        if checkIfFileExists("/etc/crontab") {
+            ret = append(ret, includePathForCrontabs("/etc/crontab", CRONTAB_WITH_USERNAME)...)
+        }
+
+        return ret
+    }
+
+    // ----------------------
+    // Debian
+    // ----------------------
+    if checkIfFileExistsAndOwnedByRoot("/etc/redhat-release") {
+        LoggerInfo.Println(" --> detected Debian family, using distribution defaults")
+
+        if checkIfFileExists("/etc/crontab") {
+            ret = append(ret, includePathForCrontabs("/etc/crontab", CRONTAB_WITH_USERNAME)...)
+        }
+
+        return ret
     }
 
     return ret
@@ -253,9 +323,9 @@ func main() {
         crontabEntry := crontabEntries[i]
 
         if enableUserSwitch {
-            runner.AddWithUser(crontabEntry.Spec, crontabEntry.User, crontabEntry.Command)
+            runner.AddWithUser(crontabEntry)
         } else {
-            runner.Add(crontabEntry.Spec, crontabEntry.Command)
+            runner.Add(crontabEntry)
         }
     }
 
