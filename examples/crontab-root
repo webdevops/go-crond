@@ -1,0 +1,7 @@
+# comment
+
+SHELL=/bin/bash
+
+* * * * * sleep 5 && id >> /tmp/test-1
+* * * * * sleep 5 && id >> /tmp/test-2
+

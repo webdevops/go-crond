@@ -1,0 +1,7 @@
+# comment
+
+SHELL=/bin/bash
+
+@every 1m id >> /tmp/test-3
+@every 1m env >> /tmp/test-4
+@every 5s env >> /tmp/test-5
