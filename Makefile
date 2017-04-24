@@ -41,10 +41,7 @@ build/go-crond-32-%: $(SOURCE)
 	CGO_ENABLED=0 GOOS=$(firstword $($*) $*) GOARCH=386 $(GOBUILD) -o $@
 
 release: $(ALL)
-ifndef desc
-	@echo "Run it as 'make release desc=tralala'"
-else
-	github-release release -u webdevops -r go-crond -t "$(TAG)" -n "$(TAG)" --description "$(desc)"
+	github-release release -u webdevops -r go-crond -t "$(TAG)" -n "$(TAG)" --description "$(TAG)"
 	@for x in $(ALL); do \
 		echo "Uploading $$x" && \
 		github-release upload -u webdevops \
@@ -53,4 +50,3 @@ else
                               -f "$$x" \
                               -n "$$(basename $$x)"; \
 	done
-endif
