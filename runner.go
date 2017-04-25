@@ -106,7 +106,14 @@ func (r *Runner) Stop() {
 
 func (r *Runner) cmdFunc(cronjob CrontabEntry, cmdCallback func(*exec.Cmd) (bool) ) func() {
 	cmdFunc := func() {
-        execCmd := exec.Command(cronjob.Shell, "-c", cronjob.Command)
+        // fall back to normal shell if not specified
+        taskShell := cronjob.Shell
+        if taskShell == "" {
+            taskShell = DEFAULT_SHELL
+        }
+
+        // Init command
+        execCmd := exec.Command(taskShell, "-c", cronjob.Command)
 
         // add custom env to cronjob
         if len(cronjob.Env) >= 1 {
