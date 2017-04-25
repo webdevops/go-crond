@@ -56,7 +56,9 @@ Run crond with a system crontab:
 
 Run crond with user crontabs (without user in it) under specific users:
 
-    go-crond root:examples/crontab-root guest:examples/crontab-guest
+    go-crond \
+        root:examples/crontab-root \ 
+        guest:examples/crontab-guest
 
 
 Run crond with auto include of /etc/cron.d and script execution of hourly, weekly, daily and monthly:
