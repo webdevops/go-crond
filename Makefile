@@ -6,7 +6,10 @@ GOBUILD = go build -ldflags '-w'
 ALL = \
 	$(foreach arch,64 32,\
 	$(foreach suffix,linux osx,\
-		build/go-crond-$(arch)-$(suffix)))
+		build/go-crond-$(arch)-$(suffix))) \
+	$(foreach arch,arm arm64,\
+		build/go-crond-$(arch)-linux)
+
 
 docker:
 	docker build . -t webdevops/go-crond
@@ -40,6 +43,14 @@ build/go-crond-64-%: $(SOURCE)
 build/go-crond-32-%: $(SOURCE)
 	@mkdir -p $(@D)
 	CGO_ENABLED=0 GOOS=$(firstword $($*) $*) GOARCH=386 $(GOBUILD) -o $@
+
+build/go-crond-arm-linux: $(SOURCE)
+	@mkdir -p $(@D)
+	CGO_ENABLED=0 GOOS=linux GOARCH=arm GOARM=6 $(GOBUILD) -o $@
+
+build/go-crond-arm64-linux: $(SOURCE)
+	@mkdir -p $(@D)
+	CGO_ENABLED=0 GOOS=linux GOARCH=arm64 $(GOBUILD) -o $@
 
 release: $(ALL)
 	github-release release -u webdevops -r go-crond -t "$(TAG)" -n "$(TAG)" --description "$(TAG)"
