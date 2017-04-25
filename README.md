@@ -73,6 +73,12 @@ Run crond with run-parts with custom time spec:
         --run-parts=1m:/etc/cron.minute \
         --run-parts=15m:/etc/cron.15min
 
+Run crond with run-parts with custom time spec and different user:
+
+    go-crond \
+        --run-parts=1m:application:/etc/cron.minute \
+        --run-parts=15m:admin:/etc/cron.15min
+
 ## Installation
 
 ```bash

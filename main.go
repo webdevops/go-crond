@@ -131,20 +131,20 @@ func includePathForCrontabs(path string, username string) []CrontabEntry {
     return ret
 }
 
-func includeRunPartsDirectories(paths []string, spec string) []CrontabEntry {
+func includeRunPartsDirectories(spec string, user string, paths []string) []CrontabEntry {
     var ret []CrontabEntry
     findExecutabesInPathes(paths, func(f os.FileInfo, path string) {
-        ret = append(ret, CrontabEntry{Spec: spec, User: opts.DefaultUser, Command: path})
+        ret = append(ret, CrontabEntry{Spec: spec, User: user, Command: path})
     })
     return ret
 }
 
-func includeRunPartsDirectory(path string, spec string) []CrontabEntry {
+func includeRunPartsDirectory(spec string, user string, path string) []CrontabEntry {
     var ret []CrontabEntry
     var paths []string = []string{path}
 
     findExecutabesInPathes(paths, func(f os.FileInfo, path string) {
-        ret = append(ret, CrontabEntry{Spec: spec, User: opts.DefaultUser, Command: path})
+        ret = append(ret, CrontabEntry{Spec: spec, User: user, Command: path})
     })
     return ret
 }
@@ -199,9 +199,16 @@ func collectCrontabs(args []string) []CrontabEntry {
                 split := strings.SplitN(runPart, ":", 2)
                 cronSpec, cronPath := split[0], split[1]
 
+                cronUser := opts.DefaultUser
                 cronSpec = fmt.Sprintf("@every %s", cronSpec)
 
-                ret = append(ret, includeRunPartsDirectory(cronPath, cronSpec)...)
+                // extract user from path
+                if strings.Contains(cronPath, ":") {
+                    split := strings.SplitN(cronPath, ":", 2)
+                    cronUser, cronPath = split[0], split[1]
+                }
+
+                ret = append(ret, includeRunPartsDirectory(cronSpec, cronUser, cronPath)...)
             } else {
                 LoggerError.Printf("Ignoring --run-parts because of missing time spec: %s\n", runPart)
             }
@@ -210,32 +217,32 @@ func collectCrontabs(args []string) []CrontabEntry {
 
     // --run-parts-1min
     if len(opts.RunParts1m) >= 1 {
-        ret = append(ret, includeRunPartsDirectories(opts.RunParts1m, "@every 1m")...)
+        ret = append(ret, includeRunPartsDirectories("@every 1m", opts.DefaultUser, opts.RunParts1m)...)
     }
 
     // --run-parts-15min
     if len(opts.RunParts15m) >= 1 {
-        ret = append(ret, includeRunPartsDirectories(opts.RunParts15m, "*/15 * * * *")...)
+        ret = append(ret, includeRunPartsDirectories("*/15 * * * *", opts.DefaultUser, opts.RunParts15m)...)
     }
 
     // --run-parts-hourly
     if len(opts.RunPartsHourly) >= 1 {
-        ret = append(ret, includeRunPartsDirectories(opts.RunPartsHourly, "@hourly")...)
+        ret = append(ret, includeRunPartsDirectories("@hourly", opts.DefaultUser, opts.RunPartsHourly)...)
     }
 
     // --run-parts-daily
     if len(opts.RunPartsDaily) >= 1 {
-        ret = append(ret, includeRunPartsDirectories(opts.RunPartsDaily, "@daily")...)
+        ret = append(ret, includeRunPartsDirectories("@daily", opts.DefaultUser, opts.RunPartsDaily)...)
     }
 
     // --run-parts-weekly
     if len(opts.RunPartsWeekly) >= 1 {
-        ret = append(ret, includeRunPartsDirectories(opts.RunPartsWeekly, "@weekly")...)
+        ret = append(ret, includeRunPartsDirectories("@weekly", opts.DefaultUser, opts.RunPartsWeekly)...)
     }
 
     // --run-parts-monthly
     if len(opts.RunPartsMonthly) >= 1 {
-        ret = append(ret, includeRunPartsDirectories(opts.RunPartsMonthly, "@monthly")...)
+        ret = append(ret, includeRunPartsDirectories("@monthly", opts.DefaultUser, opts.RunPartsMonthly)...)
     }
 
     if opts.UseSystemDefaults {
