@@ -1,16 +1,26 @@
 FROM golang:alpine
 
-RUN apk --no-cache add vim nano bash git \
-    && echo go-crond -v root:examples/crontab-root guest:examples/crontab-guest >> /root/.ash_history \
-    && echo go-crond -v examples/crontab >> /root/.ash_history \
-    && echo go-crond -v --system-defaults >> /root/.ash_history
+# Install tools
+RUN apk --no-cache add vim nano bash git
 
+# Install deps
 RUN go get github.com/robfig/cron
 RUN go get github.com/jessevdk/go-flags
 
+# Add some shell history
+RUN set -x \
+    && ln -sf /root/.ash_history /root/.bash_history \
+    && echo go-crond -v root:examples/crontab-root guest:examples/crontab-guest >> /root/.ash_history \
+    && echo go-crond -v examples/crontab >> /root/.ash_history \
+    && echo go-crond -v --run-parts=10s:guest:examples/cron.daily/ >> /root/.ash_history \
+    && echo go-crond -v --run-parts=10s:examples/cron.daily/ >> /root/.ash_history \
+    && echo go-crond -v --system-defaults >> /root/.ash_history
+
+# Copy source
 COPY . /go/src/go-crond
 WORKDIR /go/src/go-crond
 
+# Build and install
 RUN go build \
     && cp -a go-crond /usr/local/bin
 
