@@ -1,3 +1,3 @@
 #!/usr/bin/env bash
 
-echo "Hello World! 15min #1"
+echo "Hello World! 15min #1" >> /tmp/15min-1
