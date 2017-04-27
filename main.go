@@ -38,6 +38,7 @@ var opts struct {
     RunPartsMonthly           []string  `           long:"run-parts-monthly"    description:"Execute files in directory every beginning month (like run-parts)"`
     Verbose                   bool      `short:"v"  long:"verbose"              description:"verbose mode"`
     ShowVersion               bool      `short:"V"  long:"version"              description:"show version and exit"`
+    ShowOnlyVersion           bool      `           long:"dumpversion"          description:"show only version number and exit"`
     ShowHelp                  bool      `short:"h"  long:"help"                 description:"show this help message"`
 }
 
@@ -51,6 +52,12 @@ func initArgParser() ([]string) {
     // check if there is an parse error
     if err != nil {
         logFatalErrorAndExit(err, 1)
+    }
+
+    // --dumpversion
+    if (opts.ShowOnlyVersion) {
+        fmt.Println(Version)
+        os.Exit(0)
     }
 
     // --version

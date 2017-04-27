@@ -42,6 +42,7 @@ Application Options:
       --run-parts-monthly= Execute files in directory every beginning month (like run-parts)
   -v, --verbose            verbose mode
   -V, --version            show version and exit
+      --dumpversion        show only version number and exit
   -h, --help               show this help message
 ```
 
