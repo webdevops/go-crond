@@ -12,6 +12,7 @@ RUN set -x \
     && ln -sf /root/.ash_history /root/.bash_history \
     && echo go-crond -v root:examples/crontab-root guest:examples/crontab-guest >> /root/.ash_history \
     && echo go-crond -v examples/crontab >> /root/.ash_history \
+    && echo go-crond -v --run-parts-1min=guest:examples/cron.daily/ >> /root/.ash_history \
     && echo go-crond -v --run-parts=10s:guest:examples/cron.daily/ >> /root/.ash_history \
     && echo go-crond -v --run-parts=10s:examples/cron.daily/ >> /root/.ash_history \
     && echo go-crond -v --system-defaults >> /root/.ash_history

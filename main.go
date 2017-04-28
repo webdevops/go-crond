@@ -138,18 +138,28 @@ func includePathForCrontabs(path string, username string) []CrontabEntry {
     return ret
 }
 
-func includeRunPartsDirectories(spec string, user string, paths []string) []CrontabEntry {
+func includeRunPartsDirectories(spec string, paths []string) []CrontabEntry {
     var ret []CrontabEntry
-    findExecutabesInPathes(paths, func(f os.FileInfo, path string) {
-        ret = append(ret, CrontabEntry{Spec: spec, User: user, Command: path})
-    })
+
+    for i := range paths {
+        ret = append(ret, includeRunPartsDirectory(spec, paths[i])...)
+    }
+
     return ret
 }
 
-func includeRunPartsDirectory(spec string, user string, path string) []CrontabEntry {
+func includeRunPartsDirectory(spec string, path string) []CrontabEntry {
     var ret []CrontabEntry
-    var paths []string = []string{path}
 
+    user := opts.DefaultUser
+
+    // extract user from path
+    if strings.Contains(path, ":") {
+        split := strings.SplitN(path, ":", 2)
+        user, path = split[0], split[1]
+    }
+
+    var paths []string = []string{path}
     findExecutabesInPathes(paths, func(f os.FileInfo, path string) {
         ret = append(ret, CrontabEntry{Spec: spec, User: user, Command: path})
     })
@@ -205,17 +215,9 @@ func collectCrontabs(args []string) []CrontabEntry {
             if strings.Contains(runPart, ":") {
                 split := strings.SplitN(runPart, ":", 2)
                 cronSpec, cronPath := split[0], split[1]
-
-                cronUser := opts.DefaultUser
                 cronSpec = fmt.Sprintf("@every %s", cronSpec)
 
-                // extract user from path
-                if strings.Contains(cronPath, ":") {
-                    split := strings.SplitN(cronPath, ":", 2)
-                    cronUser, cronPath = split[0], split[1]
-                }
-
-                ret = append(ret, includeRunPartsDirectory(cronSpec, cronUser, cronPath)...)
+                ret = append(ret, includeRunPartsDirectory(cronSpec, cronPath)...)
             } else {
                 LoggerError.Printf("Ignoring --run-parts because of missing time spec: %s\n", runPart)
             }
@@ -224,32 +226,32 @@ func collectCrontabs(args []string) []CrontabEntry {
 
     // --run-parts-1min
     if len(opts.RunParts1m) >= 1 {
-        ret = append(ret, includeRunPartsDirectories("@every 1m", opts.DefaultUser, opts.RunParts1m)...)
+        ret = append(ret, includeRunPartsDirectories("@every 1m", opts.RunParts1m)...)
     }
 
     // --run-parts-15min
     if len(opts.RunParts15m) >= 1 {
-        ret = append(ret, includeRunPartsDirectories("*/15 * * * *", opts.DefaultUser, opts.RunParts15m)...)
+        ret = append(ret, includeRunPartsDirectories("*/15 * * * *", opts.RunParts15m)...)
     }
 
     // --run-parts-hourly
     if len(opts.RunPartsHourly) >= 1 {
-        ret = append(ret, includeRunPartsDirectories("@hourly", opts.DefaultUser, opts.RunPartsHourly)...)
+        ret = append(ret, includeRunPartsDirectories("@hourly", opts.RunPartsHourly)...)
     }
 
     // --run-parts-daily
     if len(opts.RunPartsDaily) >= 1 {
-        ret = append(ret, includeRunPartsDirectories("@daily", opts.DefaultUser, opts.RunPartsDaily)...)
+        ret = append(ret, includeRunPartsDirectories("@daily", opts.RunPartsDaily)...)
     }
 
     // --run-parts-weekly
     if len(opts.RunPartsWeekly) >= 1 {
-        ret = append(ret, includeRunPartsDirectories("@weekly", opts.DefaultUser, opts.RunPartsWeekly)...)
+        ret = append(ret, includeRunPartsDirectories("@weekly", opts.RunPartsWeekly)...)
     }
 
     // --run-parts-monthly
     if len(opts.RunPartsMonthly) >= 1 {
-        ret = append(ret, includeRunPartsDirectories("@monthly", opts.DefaultUser, opts.RunPartsMonthly)...)
+        ret = append(ret, includeRunPartsDirectories("@monthly", opts.RunPartsMonthly)...)
     }
 
     if opts.UseSystemDefaults {
