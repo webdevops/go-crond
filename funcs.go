@@ -8,12 +8,6 @@ import (
     "syscall"
 )
 
-// Log error object as message
-func logFatalErrorAndExit(err error, exitCode int) {
-    LoggerError.Fatalf("ERROR: %s\n", err)
-    os.Exit(exitCode)
-}
-
 func fileGetAbsolutePath(path string) (string, os.FileInfo) {
     ret, err := filepath.Abs(path)
     if err != nil {

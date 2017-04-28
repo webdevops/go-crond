@@ -30,14 +30,14 @@ func (r *Runner) Add(cronjob CrontabEntry) error {
 
 	err := r.cron.AddFunc(cronSpec, r.cmdFunc(cronjob, func(execCmd *exec.Cmd) bool {
         // before exec callback
-        LoggerVerbose.Printf("cronjob: spec:%v cmd:%v env:%v", cronjob.Spec, cronjob.Command, cronjob.Env)
+        LoggerInfo.CronjobExec(cronjob)
         return true
     }))
 
     if err != nil {
         LoggerError.Printf("Failed add cron job spec:%v cmd:%v err:%v", cronjob.Spec, cronjob.Command, err)
     } else {
-        LoggerInfo.Printf("Add cron job spec:%v cmd:%v", cronjob.Spec, cronjob.Command)
+        LoggerInfo.CronjobAdd(cronjob)
     }
 
 	return err
@@ -52,7 +52,7 @@ func (r *Runner) AddWithUser(cronjob CrontabEntry) error {
 
 	err := r.cron.AddFunc(cronSpec, r.cmdFunc(cronjob, func(execCmd *exec.Cmd) bool {
         // before exec callback
-        LoggerVerbose.Printf("cronjob: spec:%v usr:%v cmd:%v env:%v", cronjob.Spec, cronjob.User, cronjob.Command, cronjob.Env)
+        LoggerInfo.CronjobExec(cronjob)
 
         // lookup username
         u, err := user.Lookup(cronjob.User)
@@ -127,7 +127,9 @@ func (r *Runner) cmdFunc(cronjob CrontabEntry, cmdCallback func(*exec.Cmd) (bool
             out, err := execCmd.CombinedOutput()
 
             if err != nil {
-                LoggerError.Printf("failed cronjob: cmd:%v out:%v err:%v", cronjob.Command, string(out), err)
+                LoggerError.CronjobExecFailed(cronjob, string(out), err)
+            } else {
+                LoggerInfo.CronjobExecSuccess(cronjob)
             }
         }
 	}

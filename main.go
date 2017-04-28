@@ -2,11 +2,10 @@ package main
 
 import (
 	"fmt"
-	"log"
-	"io/ioutil"
 	"os"
 	"os/signal"
-	"runtime"
+    "log"
+    "runtime"
 	"sync"
 	"syscall"
     "path/filepath"
@@ -18,6 +17,7 @@ import (
 const (
     Author  = "webdevops.io"
     Version = "0.2.1"
+    LogPrefix = "go-crond: "
 )
 
 const (
@@ -76,18 +76,17 @@ func initArgParser() ([]string) {
     return args
 }
 
-var LoggerInfo *log.Logger
-var LoggerVerbose *log.Logger
-var LoggerError *log.Logger
+var LoggerInfo CronLogger
+var LoggerError CronLogger
 func initLogger() {
-    LoggerInfo = log.New(os.Stdout, "go-crond: ", 0)
-    LoggerError = log.New(os.Stderr, "go-crond: ", 0)
+    LoggerInfo = CronLogger{log.New(os.Stdout, LogPrefix, 0)}
+    LoggerError = CronLogger{log.New(os.Stderr, LogPrefix, 0)}
+}
 
-    if opts.Verbose {
-        LoggerVerbose = log.New(os.Stdout, "go-crond: ", 0)
-    } else {
-        LoggerVerbose = log.New(ioutil.Discard, "go-crond: ", 0)
-    }
+// Log error object as message
+func logFatalErrorAndExit(err error, exitCode int) {
+    LoggerError.Fatalf("ERROR: %s\n", err)
+    os.Exit(exitCode)
 }
 
 func findFilesInPaths(pathlist []string, callback func(os.FileInfo, string)) {
