@@ -1,6 +1,8 @@
 # comment
 
 SHELL=/bin/bash
+FOO=bar2
+bar=FOO2
 
 * * * * * sleep 5 && id >> /tmp/test-1
 * * * * * sleep 5 && id >> /tmp/test-2

@@ -1,6 +1,8 @@
 # comment
 
 SHELL=/bin/bash
+FOO=bar
+bar=FOO
 
 @every 1m id >> /tmp/test-3
 @every 1m env >> /tmp/test-4
