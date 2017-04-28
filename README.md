@@ -16,7 +16,7 @@ Using https://godoc.org/github.com/robfig/cron
 ## Features
 
 - system crontab (with username inside)
-- user crontabs (without user inside)
+- user crontabs (without username inside)
 - run-parts support
 - Logging to STDOUT and STDERR (instead of sending mails)
 - Keep current environment (eg. for usage in Docker containers)
