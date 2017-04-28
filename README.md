@@ -86,7 +86,7 @@ Run crond with run-parts with custom time spec and different user:
 ## Installation
 
 ```bash
-GOCROND_VERSION=0.2.1 \
+GOCROND_VERSION=0.3.0 \
 && wget -O /usr/local/bin/go-crond https://github.com/webdevops/go-crond/releases/download/$GOREPLACE_VERSION/go-crond-64-linux \
 && chmod +x /usr/local/bin/go-crond
 ```
