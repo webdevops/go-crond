@@ -21,7 +21,7 @@ const (
 )
 
 const (
-    CRONTAB_WITH_USERNAME = ""
+    CRONTAB_TYPE_SYSTEM = ""
 )
 
 var opts struct {
@@ -90,8 +90,8 @@ func logFatalErrorAndExit(err error, exitCode int) {
 }
 
 func findFilesInPaths(pathlist []string, callback func(os.FileInfo, string)) {
-    for i := range pathlist {
-        filepath.Walk(pathlist[i], func(path string, f os.FileInfo, err error) error {
+    for _, path := range pathlist {
+        filepath.Walk(path, func(path string, f os.FileInfo, err error) error {
             path, _ = filepath.Abs(path)
 
             if f.IsDir() {
@@ -140,8 +140,8 @@ func includePathForCrontabs(path string, username string) []CrontabEntry {
 func includeRunPartsDirectories(spec string, paths []string) []CrontabEntry {
     var ret []CrontabEntry
 
-    for i := range paths {
-        ret = append(ret, includeRunPartsDirectory(spec, paths[i])...)
+    for _, path := range paths {
+        ret = append(ret, includeRunPartsDirectory(spec, path)...)
     }
 
     return ret
@@ -166,15 +166,23 @@ func includeRunPartsDirectory(spec string, path string) []CrontabEntry {
 }
 
 func parseCrontab(path string, username string) []CrontabEntry {
+    var parser *Parser
+    var err error
+
 	file, err := os.Open(path)
 	if err != nil {
 		LoggerError.Fatalf("crontab path: %v err:%v", path, err)
 	}
 
-	parser, err := NewParser(file, username)
-	if err != nil {
-		LoggerError.Fatalf("Parser read err: %v", err)
-	}
+    if username == CRONTAB_TYPE_SYSTEM {
+        parser, err = NewCronjobSystemParser(file)
+    } else {
+        parser, err = NewCronjobUserParser(file, username)
+    }
+
+    if err != nil {
+        LoggerError.Fatalf("Parser read err: %v", err)
+    }
 
     crontabEntries := parser.Parse()
 
@@ -185,9 +193,8 @@ func collectCrontabs(args []string) []CrontabEntry {
     var ret []CrontabEntry
 
     // args: crontab files as normal arguments
-    for i := range args {
-        crontabPath := args[i]
-        crontabUser := CRONTAB_WITH_USERNAME
+    for _, crontabPath := range args {
+        crontabUser := CRONTAB_TYPE_SYSTEM
 
         if strings.Contains(crontabPath, ":") {
             split := strings.SplitN(crontabPath, ":", 2)
@@ -203,14 +210,12 @@ func collectCrontabs(args []string) []CrontabEntry {
 
     // --include-crond
     if len(opts.IncludeCronD) >= 1 {
-        ret = append(ret, includePathsForCrontabs(opts.IncludeCronD, CRONTAB_WITH_USERNAME)...)
+        ret = append(ret, includePathsForCrontabs(opts.IncludeCronD, CRONTAB_TYPE_SYSTEM)...)
     }
 
     // --run-parts
     if len(opts.RunParts) >= 1 {
-        for i := range opts.RunParts {
-            runPart := opts.RunParts[i]
-
+        for _, runPart := range opts.RunParts {
             if strings.Contains(runPart, ":") {
                 split := strings.SplitN(runPart, ":", 2)
                 cronSpec, cronPath := split[0], split[1]
@@ -283,11 +288,11 @@ func includeSystemDefaults() []CrontabEntry {
         LoggerInfo.Println(" --> detected RedHat family, using distribution defaults")
 
         if checkIfFileExists("/etc/crontabs") {
-            ret = append(ret, includePathForCrontabs("/etc/crontabs", CRONTAB_WITH_USERNAME)...)
+            ret = append(ret, includePathForCrontabs("/etc/crontabs", CRONTAB_TYPE_SYSTEM)...)
         }
 
         if checkIfDirectoryExists("/etc/cron.d") {
-            ret = append(ret, includePathForCrontabs("/etc/cron.d", CRONTAB_WITH_USERNAME)...)
+            ret = append(ret, includePathForCrontabs("/etc/cron.d", CRONTAB_TYPE_SYSTEM)...)
         }
 
         return ret
@@ -300,7 +305,7 @@ func includeSystemDefaults() []CrontabEntry {
         LoggerInfo.Println(" --> detected SuSE family, using distribution defaults")
 
         if checkIfFileExists("/etc/crontab") {
-            ret = append(ret, includePathForCrontabs("/etc/crontab", CRONTAB_WITH_USERNAME)...)
+            ret = append(ret, includePathForCrontabs("/etc/crontab", CRONTAB_TYPE_SYSTEM)...)
         }
 
         return ret
@@ -313,7 +318,7 @@ func includeSystemDefaults() []CrontabEntry {
         LoggerInfo.Println(" --> detected Debian family, using distribution defaults")
 
         if checkIfFileExists("/etc/crontab") {
-            ret = append(ret, includePathForCrontabs("/etc/crontab", CRONTAB_WITH_USERNAME)...)
+            ret = append(ret, includePathForCrontabs("/etc/crontab", CRONTAB_TYPE_SYSTEM)...)
         }
 
         return ret
@@ -344,9 +349,7 @@ func main() {
 	runtime.GOMAXPROCS(opts.Processes)
     runner := NewRunner()
 
-    for i := range crontabEntries {
-        crontabEntry := crontabEntries[i]
-
+    for _, crontabEntry := range crontabEntries {
         if enableUserSwitch {
             runner.AddWithUser(crontabEntry)
         } else {

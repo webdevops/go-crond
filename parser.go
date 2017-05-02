@@ -9,15 +9,21 @@ import (
 )
 
 const (
-    ENV_LINE =`^(\S+)=(\S+)\s*$`
+    ENV_LINE = `^(\S+)=(\S+)\s*$`
 
-    //                        ----spec------------------------------------    --user--  -cmd-
-	CRONJOB_WITH_USER = `^\s*([^@\s]+\s+\S+\s+\S+\s+\S+\s+\S+|@every\s+\S+)\s+([^\s]+)\s+(.+)$`
+    //                     ----spec------------------------------------    --user--  -cmd-
+	CRONJOB_SYSTEM = `^\s*([^@\s]+\s+\S+\s+\S+\s+\S+\s+\S+|@every\s+\S+)\s+([^\s]+)\s+(.+)$`
 
-    //                           ----spec------------------------------------    -cmd-
-	CRONJOB_WITHOUT_USER = `^\s*([^@\s]+\s+\S+\s+\S+\s+\S+\s+\S+|@every\s+\S+)\s+(.+)$`
+    //                  ----spec------------------------------------    -cmd-
+	CRONJOB_USER = `^\s*([^@\s]+\s+\S+\s+\S+\s+\S+\s+\S+|@every\s+\S+)\s+(.+)$`
 
     DEFAULT_SHELL = "sh"
+)
+
+var (
+    envLineRegex = regexp.MustCompile(ENV_LINE)
+    cronjobSystemRegex = regexp.MustCompile(CRONJOB_SYSTEM)
+    cronjobUserRegex = regexp.MustCompile(CRONJOB_USER)
 )
 
 type EnvVar struct {
@@ -35,39 +41,28 @@ type CrontabEntry struct {
 
 type Parser struct {
 	cronLineRegex   *regexp.Regexp
-	envRegex        *regexp.Regexp
 	reader          io.Reader
     cronjobUsername string
 }
 
-func NewParser(reader io.Reader, username string) (*Parser, error) {
-    var cronLineRegex *regexp.Regexp
-    var envRegex *regexp.Regexp
-    var err error
-
-    if (username == CRONTAB_WITH_USERNAME) {
-        cronLineRegex, err = regexp.Compile(CRONJOB_WITH_USER)
-    } else {
-        cronLineRegex, err = regexp.Compile(CRONJOB_WITHOUT_USER)
+func NewCronjobUserParser(reader io.Reader, username string) (*Parser, error) {
+    p := &Parser{
+        cronLineRegex: cronjobUserRegex,
+        reader: reader,
+        cronjobUsername: username,
     }
 
-	if err != nil {
-		return nil, err
-	}
+    return p, nil
+}
 
-    envRegex, err = regexp.Compile(ENV_LINE)
-	if err != nil {
-		return nil, err
-	}
+func NewCronjobSystemParser(reader io.Reader) (*Parser, error) {
+    p := &Parser{
+        cronLineRegex: cronjobSystemRegex,
+        reader: reader,
+        cronjobUsername: CRONTAB_TYPE_SYSTEM,
+    }
 
-	p := &Parser{
-		cronLineRegex: cronLineRegex,
-		envRegex: envRegex,
-		reader: reader,
-        cronjobUsername: username,
-	}
-
-	return p, nil
+    return p, nil
 }
 
 func (p *Parser) Parse() ([]CrontabEntry) {
@@ -97,8 +92,8 @@ func (p *Parser) parseLines() ([]CrontabEntry) {
 		}
 
         // environment line
-        if p.envRegex.MatchString(line) == true {
-            m := p.envRegex.FindStringSubmatch(line)
+        if envLineRegex.MatchString(line) == true {
+            m := envLineRegex.FindStringSubmatch(line)
             envName := strings.TrimSpace(m[1])
             envValue := strings.TrimSpace(m[2])
 
@@ -115,7 +110,7 @@ func (p *Parser) parseLines() ([]CrontabEntry) {
 		if p.cronLineRegex.MatchString(line) == true {
 			m := p.cronLineRegex.FindStringSubmatch(line)
 
-            if p.cronjobUsername == CRONTAB_WITH_USERNAME {
+            if p.cronjobUsername == CRONTAB_TYPE_SYSTEM {
                 crontabSpec = strings.TrimSpace(m[1])
                 crontabUser = strings.TrimSpace(m[2])
                 crontabCommand = strings.TrimSpace(m[3])
