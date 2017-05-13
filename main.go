@@ -85,7 +85,11 @@ func initLogger() {
 
 // Log error object as message
 func logFatalErrorAndExit(err error, exitCode int) {
-    LoggerError.Fatalf("ERROR: %s\n", err)
+    if err != nil {
+        LoggerError.Fatalf("ERROR: %s\n", err)
+    } else {
+        LoggerError.Fatalln("ERROR: Unknown fatal error")
+    }
     os.Exit(exitCode)
 }
 
@@ -328,10 +332,9 @@ func includeSystemDefaults() []CrontabEntry {
 }
 
 func main() {
-    args := initArgParser()
     initLogger()
-
-
+    args := initArgParser()
+    
     LoggerInfo.Printf("Starting version %s", Version)
 
     var wg sync.WaitGroup
