@@ -17,7 +17,7 @@ func (CronLogger CronLogger) Verbose(message string) {
     }
 }
 
-func (CronLogger CronLogger) cronjobToString(cronjob CrontabEntry) string {
+func (CronLogger CronLogger) CronjobToString(cronjob CrontabEntry) string {
     parts := []string{}
 
     parts = append(parts, fmt.Sprintf("spec:'%v'", cronjob.Spec))
@@ -32,12 +32,12 @@ func (CronLogger CronLogger) cronjobToString(cronjob CrontabEntry) string {
 }
 
 func (CronLogger CronLogger) CronjobAdd(cronjob CrontabEntry) {
-    CronLogger.Printf("add: %v\n", CronLogger.cronjobToString(cronjob))
+    CronLogger.Printf("add: %v\n", CronLogger.CronjobToString(cronjob))
 }
 
 func (CronLogger CronLogger) CronjobExec(cronjob CrontabEntry) {
     if opts.Verbose {
-        CronLogger.Printf("exec: %v\n", CronLogger.cronjobToString(cronjob))
+        CronLogger.Printf("exec: %v\n", CronLogger.CronjobToString(cronjob))
     }
 }
 
@@ -47,6 +47,6 @@ func (CronLogger CronLogger) CronjobExecFailed(cronjob CrontabEntry, output stri
 
 func (CronLogger CronLogger) CronjobExecSuccess(cronjob CrontabEntry) {
     if opts.Verbose {
-        CronLogger.Printf("ok: %v\n", CronLogger.cronjobToString(cronjob))
+        CronLogger.Printf("ok: %v\n", CronLogger.CronjobToString(cronjob))
     }
 }

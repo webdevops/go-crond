@@ -82,9 +82,9 @@ func (r *Runner) AddWithUser(cronjob CrontabEntry) error {
     }))
 
     if err != nil {
-        LoggerError.Printf("Failed add cron job spec:%v cmd:%v usr:%v err:%v", cronjob.Spec, cronjob.Command, cronjob.User, err)
+        LoggerError.Printf("Failed add cron job %v; Error:%v", LoggerError.CronjobToString(cronjob), err)
     } else {
-        LoggerInfo.Printf("Add cron job spec:%v cmd:%v usr:%v", cronjob.Spec, cronjob.Command, cronjob.User)
+        LoggerInfo.Printf("Add cron job %v", LoggerError.CronjobToString(cronjob))
     }
 
 	return err
