@@ -29,7 +29,7 @@ Usage:
   go-crond
 
 Application Options:
-      --processes=         Number of parallel executions (default: 1)
+      --threads=           Number of parallel executions (default: 20)
       --default-user=      Default user (default: root)
       --include=           Include files in directory as system crontabs (with user)
       --system-defaults    Include standard paths for distribution

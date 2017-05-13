@@ -25,7 +25,7 @@ const (
 )
 
 var opts struct {
-    Processes                 int       `           long:"processes"            description:"Number of parallel executions" default:"1"`
+    ThreadCount               int       `           long:"threads"              description:"Number of parallel executions" default:"20"`
     DefaultUser               string    `           long:"default-user"         description:"Default user"                  default:"root"`
     IncludeCronD              []string  `           long:"include"              description:"Include files in directory as system crontabs (with user)"`
     UseSystemDefaults         bool      `           long:"system-defaults"      description:"Include standard paths for distribution"`
@@ -344,7 +344,7 @@ func main() {
 
     crontabEntries := collectCrontabs(args)
 
-	runtime.GOMAXPROCS(opts.Processes)
+	runtime.GOMAXPROCS(opts.ThreadCount)
     runner := NewRunner()
 
     for _, crontabEntry := range crontabEntries {
