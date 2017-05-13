@@ -7,6 +7,13 @@ RUN apk --no-cache add vim nano bash git
 RUN go get github.com/robfig/cron
 RUN go get github.com/jessevdk/go-flags
 
+RUN mkdir -p \
+    /etc/cron.d/ \
+    /etc/cron.daily/ \
+    /etc/cron.hourly/ \
+    /etc/cron.monthly/ \
+    /etc/cron.weekly/
+
 # Add some shell history
 RUN set -x \
     && ln -sf /root/.ash_history /root/.bash_history \
