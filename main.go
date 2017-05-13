@@ -281,8 +281,6 @@ func includeSystemDefaults() []CrontabEntry {
         if checkIfDirectoryExists("/etc/crontabs") {
             ret = append(ret, includePathForCrontabs("/etc/crontabs", opts.DefaultUser)...)
         }
-
-        return ret
     }
 
     // ----------------------
@@ -294,12 +292,6 @@ func includeSystemDefaults() []CrontabEntry {
         if checkIfFileExists("/etc/crontabs") {
             ret = append(ret, includePathForCrontabs("/etc/crontabs", CRONTAB_TYPE_SYSTEM)...)
         }
-
-        if checkIfDirectoryExists("/etc/cron.d") {
-            ret = append(ret, includePathForCrontabs("/etc/cron.d", CRONTAB_TYPE_SYSTEM)...)
-        }
-
-        return ret
     }
 
     // ----------------------
@@ -311,8 +303,6 @@ func includeSystemDefaults() []CrontabEntry {
         if checkIfFileExists("/etc/crontab") {
             ret = append(ret, includePathForCrontabs("/etc/crontab", CRONTAB_TYPE_SYSTEM)...)
         }
-
-        return ret
     }
 
     // ----------------------
@@ -324,8 +314,13 @@ func includeSystemDefaults() []CrontabEntry {
         if checkIfFileExists("/etc/crontab") {
             ret = append(ret, includePathForCrontabs("/etc/crontab", CRONTAB_TYPE_SYSTEM)...)
         }
+    }
 
-        return ret
+    // ----------------------
+    // General
+    // ----------------------
+    if checkIfDirectoryExists("/etc/cron.d") {
+        ret = append(ret, includePathForCrontabs("/etc/cron.d", CRONTAB_TYPE_SYSTEM)...)
     }
 
     return ret
