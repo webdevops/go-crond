@@ -6,7 +6,7 @@
 [![Github All Releases](https://img.shields.io/github/downloads/webdevops/go-crond/total.svg)]()
 [![Github Releases](https://img.shields.io/github/downloads/webdevops/go-crond/latest/total.svg)]()
 
-Cron daemon implemented in Golang
+A cron daemon written in golang
 
 Inspired by https://github.com/anarcher/go-cron
 
