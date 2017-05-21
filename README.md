@@ -90,3 +90,10 @@ GOCROND_VERSION=0.4.0 \
 && wget -O "/usr/local/bin/go-crond https://github.com/webdevops/go-crond/releases/download/$GOCROND_VERSION/go-crond-64-linux" \
 && chmod +x /usr/local/bin/go-crond
 ```
+
+## Docker images
+
+| Image                        | Description                                                         |
+|:-----------------------------|:--------------------------------------------------------------------|
+| `webdevops/go-crond:latest`  | Latest release, binary only                                         |
+| `webdevops/go-crond:master`  | Current development version in branch `master`, with golang runtime |
