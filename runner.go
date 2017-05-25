@@ -22,6 +22,7 @@ func NewRunner() *Runner {
 	return r
 }
 
+// Add crontab entry
 func (r *Runner) Add(cronjob CrontabEntry) error {
     cronSpec := cronjob.Spec
     if ! strings.HasPrefix(cronjob.Spec, "@") {
@@ -43,6 +44,7 @@ func (r *Runner) Add(cronjob CrontabEntry) error {
 	return err
 }
 
+// Add crontab entry with user
 func (r *Runner) AddWithUser(cronjob CrontabEntry) error {
 
     cronSpec := cronjob.Spec
@@ -90,20 +92,24 @@ func (r *Runner) AddWithUser(cronjob CrontabEntry) error {
 	return err
 }
 
+// Return number of jobs
 func (r *Runner) Len() int {
 	return len(r.cron.Entries())
 }
 
+// Start runner
 func (r *Runner) Start() {
 	LoggerInfo.Printf("Start runner with %d jobs\n", r.Len())
 	r.cron.Start()
 }
 
+// Stop runner
 func (r *Runner) Stop() {
 	r.cron.Stop()
 	LoggerInfo.Println("Stop runner")
 }
 
+// Execute crontab command
 func (r *Runner) cmdFunc(cronjob CrontabEntry, cmdCallback func(*exec.Cmd) (bool) ) func() {
 	cmdFunc := func() {
         // fall back to normal shell if not specified

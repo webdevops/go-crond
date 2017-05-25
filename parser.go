@@ -45,6 +45,7 @@ type Parser struct {
     cronjobUsername string
 }
 
+// Create new crontab parser (user crontab without user specification)
 func NewCronjobUserParser(reader io.Reader, username string) (*Parser, error) {
     p := &Parser{
         cronLineRegex: cronjobUserRegex,
@@ -55,6 +56,7 @@ func NewCronjobUserParser(reader io.Reader, username string) (*Parser, error) {
     return p, nil
 }
 
+// Create new crontab parser (crontab with user specification)
 func NewCronjobSystemParser(reader io.Reader) (*Parser, error) {
     p := &Parser{
         cronLineRegex: cronjobSystemRegex,
@@ -65,12 +67,14 @@ func NewCronjobSystemParser(reader io.Reader) (*Parser, error) {
     return p, nil
 }
 
+// Parse crontab
 func (p *Parser) Parse() ([]CrontabEntry) {
     entries := p.parseLines()
 
 	return entries
 }
 
+// Parse lines from crontab
 func (p *Parser) parseLines() ([]CrontabEntry) {
     var entries []CrontabEntry
     var crontabSpec string
