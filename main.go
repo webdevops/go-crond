@@ -6,7 +6,6 @@ import (
 	"os/signal"
     "log"
     "runtime"
-	"sync"
 	"syscall"
     "path/filepath"
     "os/user"
@@ -38,6 +37,7 @@ var opts struct {
     RunPartsWeekly            []string  `           long:"run-parts-weekly"     description:"Execute files in directory every beginning week (like run-parts)"`
     RunPartsMonthly           []string  `           long:"run-parts-monthly"    description:"Execute files in directory every beginning month (like run-parts)"`
     AllowUnprivileged         bool      `           long:"allow-unprivileged"   description:"Allow daemon to run as non root (unprivileged) user"`
+    EnableUserSwitching       bool
     Verbose                   bool      `short:"v"  long:"verbose"              description:"verbose mode"`
     ShowVersion               bool      `short:"V"  long:"version"              description:"show version and exit"`
     ShowOnlyVersion           bool      `           long:"dumpversion"          description:"show only version number and exit"`
@@ -328,55 +328,71 @@ func includeSystemDefaults() []CrontabEntry {
     return ret
 }
 
-func main() {
-    initLogger()
-    args := initArgParser()
-    
-    LoggerInfo.Printf("Starting %s version %s", Name, Version)
-
-    var wg sync.WaitGroup
-
-    enableUserSwitch := true
-
-    currentUser, _ := user.Current()
-    if currentUser.Uid != "0" {
-        if opts.AllowUnprivileged {
-            LoggerError.Println("WARNING: go-crond is NOT running as root, disabling user switching")
-            enableUserSwitch = false
-        } else {
-            LoggerError.Println("ERROR: go-crond is NOT running as root, add option --allow-unprivileged if this is ok")
-            os.Exit(1)
-        }
-    }
-
+func createCronRunner(args []string) (*Runner) {
     crontabEntries := collectCrontabs(args)
 
-	runtime.GOMAXPROCS(opts.ThreadCount)
+    runtime.GOMAXPROCS(opts.ThreadCount)
     runner := NewRunner()
 
     for _, crontabEntry := range crontabEntries {
-        if enableUserSwitch {
+        if opts.EnableUserSwitching {
             runner.AddWithUser(crontabEntry)
         } else {
             runner.Add(crontabEntry)
         }
     }
 
-    registerRunnerShutdown(runner, &wg)
-    runner.Start()
-    wg.Add(1)
-	wg.Wait()
-
-	LoggerInfo.Println("Terminated")
+    return runner
 }
 
-func registerRunnerShutdown(runner *Runner, wg *sync.WaitGroup) {
+func main() {
+    initLogger()
+    args := initArgParser()
+
+    c := make(chan os.Signal, 1)
+    signal.Notify(c, syscall.SIGHUP)
+    
+    LoggerInfo.Printf("Starting %s version %s", Name, Version)
+
+    // check if user switching is possible (have to be root)
+    opts.EnableUserSwitching = true
+    currentUser, _ := user.Current()
+    if currentUser.Uid != "0" {
+        if opts.AllowUnprivileged {
+            LoggerError.Println("WARNING: go-crond is NOT running as root, disabling user switching")
+            opts.EnableUserSwitching = false
+        } else {
+            LoggerError.Println("ERROR: go-crond is NOT running as root, add option --allow-unprivileged if this is ok")
+            os.Exit(1)
+        }
+    }
+
+    // endless daemon-reload loop
+    for {
+        // create new cron runner
+        runner := createCronRunner(args)
+        registerRunnerShutdown(runner)
+
+        // start new cron runner
+        runner.Start()
+
+        // check if we received SIGHUP and start a new loop
+        s := <-c
+        LoggerInfo.Println("Got signal: ", s)
+        runner.Stop()
+        LoggerInfo.Println("Reloading configuration")
+    }
+}
+
+func registerRunnerShutdown(runner *Runner) {
 	c := make(chan os.Signal, 2)
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
 	go func() {
 		s := <-c
 		LoggerInfo.Println("Got signal: ", s)
 		runner.Stop()
-		wg.Done()
+
+        LoggerInfo.Println("Terminated")
+        os.Exit(1)
 	}()
 }
