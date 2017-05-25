@@ -2,13 +2,13 @@ package main
 
 import (
 	"fmt"
+	"github.com/robfig/cron"
 	"os"
 	"os/exec"
 	"os/user"
-	"syscall"
 	"strconv"
 	"strings"
-    "github.com/robfig/cron"
+	"syscall"
 )
 
 type Runner struct {
@@ -24,22 +24,22 @@ func NewRunner() *Runner {
 
 // Add crontab entry
 func (r *Runner) Add(cronjob CrontabEntry) error {
-    cronSpec := cronjob.Spec
-    if ! strings.HasPrefix(cronjob.Spec, "@") {
-        cronSpec = fmt.Sprintf("0 %s", cronjob.Spec)
-    }
+	cronSpec := cronjob.Spec
+	if !strings.HasPrefix(cronjob.Spec, "@") {
+		cronSpec = fmt.Sprintf("0 %s", cronjob.Spec)
+	}
 
 	err := r.cron.AddFunc(cronSpec, r.cmdFunc(cronjob, func(execCmd *exec.Cmd) bool {
-        // before exec callback
-        LoggerInfo.CronjobExec(cronjob)
-        return true
-    }))
+		// before exec callback
+		LoggerInfo.CronjobExec(cronjob)
+		return true
+	}))
 
-    if err != nil {
-        LoggerError.Printf("Failed add cron job spec:%v cmd:%v err:%v", cronjob.Spec, cronjob.Command, err)
-    } else {
-        LoggerInfo.CronjobAdd(cronjob)
-    }
+	if err != nil {
+		LoggerError.Printf("Failed add cron job spec:%v cmd:%v err:%v", cronjob.Spec, cronjob.Command, err)
+	} else {
+		LoggerInfo.CronjobAdd(cronjob)
+	}
 
 	return err
 }
@@ -47,47 +47,47 @@ func (r *Runner) Add(cronjob CrontabEntry) error {
 // Add crontab entry with user
 func (r *Runner) AddWithUser(cronjob CrontabEntry) error {
 
-    cronSpec := cronjob.Spec
-    if ! strings.HasPrefix(cronjob.Spec, "@") {
-        cronSpec = fmt.Sprintf("0 %s", cronjob.Spec)
-    }
+	cronSpec := cronjob.Spec
+	if !strings.HasPrefix(cronjob.Spec, "@") {
+		cronSpec = fmt.Sprintf("0 %s", cronjob.Spec)
+	}
 
 	err := r.cron.AddFunc(cronSpec, r.cmdFunc(cronjob, func(execCmd *exec.Cmd) bool {
-        // before exec callback
-        LoggerInfo.CronjobExec(cronjob)
+		// before exec callback
+		LoggerInfo.CronjobExec(cronjob)
 
-        // lookup username
-        u, err := user.Lookup(cronjob.User)
-        if err != nil {
-            LoggerError.Printf("user lookup failed: %v", err)
-            return false
-        }
+		// lookup username
+		u, err := user.Lookup(cronjob.User)
+		if err != nil {
+			LoggerError.Printf("user lookup failed: %v", err)
+			return false
+		}
 
-        // convert userid to int
-        userId, err := strconv.ParseUint(u.Uid, 10, 32)
-        if err != nil {
-            LoggerError.Printf("Cannot convert user to id:%v", err)
-            return false
-        }
+		// convert userid to int
+		userId, err := strconv.ParseUint(u.Uid, 10, 32)
+		if err != nil {
+			LoggerError.Printf("Cannot convert user to id:%v", err)
+			return false
+		}
 
-        // convert groupid to int
-        groupId, err := strconv.ParseUint(u.Gid, 10, 32)
-        if err != nil {
-            LoggerError.Printf("Cannot convert group to id:%v", err)
-            return false
-        }
+		// convert groupid to int
+		groupId, err := strconv.ParseUint(u.Gid, 10, 32)
+		if err != nil {
+			LoggerError.Printf("Cannot convert group to id:%v", err)
+			return false
+		}
 
-        // add process credentials
-        execCmd.SysProcAttr = &syscall.SysProcAttr{}
-        execCmd.SysProcAttr.Credential = &syscall.Credential{Uid: uint32(userId), Gid: uint32(groupId)}
-        return true
-    }))
+		// add process credentials
+		execCmd.SysProcAttr = &syscall.SysProcAttr{}
+		execCmd.SysProcAttr.Credential = &syscall.Credential{Uid: uint32(userId), Gid: uint32(groupId)}
+		return true
+	}))
 
-    if err != nil {
-        LoggerError.Printf("Failed add cron job %v; Error:%v", LoggerError.CronjobToString(cronjob), err)
-    } else {
-        LoggerInfo.Printf("Add cron job %v", LoggerError.CronjobToString(cronjob))
-    }
+	if err != nil {
+		LoggerError.Printf("Failed add cron job %v; Error:%v", LoggerError.CronjobToString(cronjob), err)
+	} else {
+		LoggerInfo.Printf("Add cron job %v", LoggerError.CronjobToString(cronjob))
+	}
 
 	return err
 }
@@ -110,34 +110,34 @@ func (r *Runner) Stop() {
 }
 
 // Execute crontab command
-func (r *Runner) cmdFunc(cronjob CrontabEntry, cmdCallback func(*exec.Cmd) (bool) ) func() {
+func (r *Runner) cmdFunc(cronjob CrontabEntry, cmdCallback func(*exec.Cmd) bool) func() {
 	cmdFunc := func() {
-        // fall back to normal shell if not specified
-        taskShell := cronjob.Shell
-        if taskShell == "" {
-            taskShell = DEFAULT_SHELL
-        }
+		// fall back to normal shell if not specified
+		taskShell := cronjob.Shell
+		if taskShell == "" {
+			taskShell = DEFAULT_SHELL
+		}
 
-        // Init command
-        execCmd := exec.Command(taskShell, "-c", cronjob.Command)
+		// Init command
+		execCmd := exec.Command(taskShell, "-c", cronjob.Command)
 
-        // add custom env to cronjob
-        if len(cronjob.Env) >= 1 {
-            execCmd.Env = append(os.Environ(), cronjob.Env...)
-        }
+		// add custom env to cronjob
+		if len(cronjob.Env) >= 1 {
+			execCmd.Env = append(os.Environ(), cronjob.Env...)
+		}
 
-        // exec custom callback
-        if cmdCallback(execCmd) {
+		// exec custom callback
+		if cmdCallback(execCmd) {
 
-            // exec job
-            out, err := execCmd.CombinedOutput()
+			// exec job
+			out, err := execCmd.CombinedOutput()
 
-            if err != nil {
-                LoggerError.CronjobExecFailed(cronjob, string(out), err)
-            } else {
-                LoggerInfo.CronjobExecSuccess(cronjob)
-            }
-        }
+			if err != nil {
+				LoggerError.CronjobExecFailed(cronjob, string(out), err)
+			} else {
+				LoggerInfo.CronjobExecSuccess(cronjob)
+			}
+		}
 	}
 	return cmdFunc
 }
