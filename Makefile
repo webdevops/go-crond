@@ -18,7 +18,7 @@ docker-dev:
 	docker build -f Dockerfile.develop . -t webdevops/go-crond:develop
 
 docker-run-dev: docker-dev
-	docker run -ti --rm -w "$$(pwd)" -v "$$(pwd):$$(pwd):ro" webdevops/go-crond:develop sh
+	docker run -ti --rm -w "$$(pwd)" -v "$$(pwd):$$(pwd):ro" --name=cron webdevops/go-crond:develop sh
 
 all: test build
 
