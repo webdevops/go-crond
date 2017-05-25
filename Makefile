@@ -17,12 +17,19 @@ docker:
 docker-dev:
 	docker build -f Dockerfile.develop . -t webdevops/go-crond:develop
 
-docker-run-dev: docker-dev
-	docker run -ti --rm -w "$$(pwd)" -v "$$(pwd):$$(pwd):ro" --name=cron webdevops/go-crond:develop sh
+docker-run: docker-dev
+	docker run -ti --rm -w "$$(pwd)" -v "$$(pwd):$$(pwd):ro" --name=cron webdevops/go-crond:develop bash
+
+build-env: docker-dev
+	docker run -ti --rm -w "$$(pwd)" -v "$$(pwd):$$(pwd)" --name=cron webdevops/go-crond:develop bash
 
 all: test build
 
-build: clean test $(ALL)
+dependences:
+	go get -u github.com/robfig/cron
+	go get -u github.com/jessevdk/go-flags
+
+build: clean dependences test $(ALL)
 
 # cram is a python app, so 'easy_install/pip install cram' to run tests
 test:
@@ -34,23 +41,31 @@ clean:
 
 # os is determined as thus: if variable of suffix exists, it's taken, if not, then
 # suffix itself is taken
-win.exe = windows
 osx = darwin
-build/go-crond-64-%: $(SOURCE)
-	@mkdir -p $(@D)
-	CGO_ENABLED=0 GOOS=$(firstword $($*) $*) GOARCH=amd64 $(GOBUILD) -o $@
 
-build/go-crond-32-%: $(SOURCE)
+build/go-crond-64-osx: $(SOURCE)
 	@mkdir -p $(@D)
-	CGO_ENABLED=0 GOOS=$(firstword $($*) $*) GOARCH=386 $(GOBUILD) -o $@
+	CGO_ENABLED=1 GOOS=$(firstword $($*) $*) GOARCH=amd64 $(GOBUILD) -o $@
+
+build/go-crond-32-osx: $(SOURCE)
+	@mkdir -p $(@D)
+	CGO_ENABLED=1 GOOS=$(firstword $($*) $*) GOARCH=386 $(GOBUILD) -o $@
+
+build/go-crond-64-linux: $(SOURCE)
+	@mkdir -p $(@D)
+	docker run -ti --rm -w "$$(pwd)" -v "$$(pwd):$$(pwd)" --name=cron webdevops/go-crond:develop sh -c 'CGO_ENABLED=1 GOOS=$(firstword $($*) $*) GOARCH=amd64 $(GOBUILD) -o $@'
+
+build/go-crond-32-linux: $(SOURCE)
+	@mkdir -p $(@D)
+	docker run -ti --rm -w "$$(pwd)" -v "$$(pwd):$$(pwd)" --name=cron webdevops/go-crond:develop sh -c 'CGO_ENABLED=1 GOOS=$(firstword $($*) $*) GOARCH=386 $(GOBUILD) -o $@'
 
 build/go-crond-arm-linux: $(SOURCE)
 	@mkdir -p $(@D)
-	CGO_ENABLED=0 GOOS=linux GOARCH=arm GOARM=6 $(GOBUILD) -o $@
+	docker run -ti --rm -w "$$(pwd)" -v "$$(pwd):$$(pwd)" --name=cron webdevops/go-crond:develop sh -c 'CC=arm-linux-gnueabi-gcc CGO_ENABLED=1 GOOS=linux GOARCH=arm GOARM=6 $(GOBUILD) -o $@'
 
 build/go-crond-arm64-linux: $(SOURCE)
 	@mkdir -p $(@D)
-	CGO_ENABLED=0 GOOS=linux GOARCH=arm64 $(GOBUILD) -o $@
+	docker run -ti --rm -w "$$(pwd)" -v "$$(pwd):$$(pwd)" --name=cron webdevops/go-crond:develop sh -c 'CC=aarch64-linux-gnu-gcc CGO_ENABLED=1 GOOS=linux GOARCH=arm64 $(GOBUILD) -o $@'
 
 release: build
 	github-release release -u webdevops -r go-crond -t "$(TAG)" -n "$(TAG)" --description "$(TAG)"
