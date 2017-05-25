@@ -29,21 +29,22 @@ Usage:
   go-crond
 
 Application Options:
-      --threads=           Number of parallel executions (default: 20)
-      --default-user=      Default user (default: root)
-      --include=           Include files in directory as system crontabs (with user)
-      --system-defaults    Include standard paths for distribution
-      --run-parts=         Execute files in directory with custom spec (like run-parts; spec-units:ns,us,s,m,h; format:time-spec:path; eg:10s,1m,1h30m)
-      --run-parts-1min=    Execute files in directory every beginning minute (like run-parts)
-      --run-parts-15min=   Execute files in directory every beginning 15 minutes (like run-parts)
-      --run-parts-hourly=  Execute files in directory every beginning hour (like run-parts)
-      --run-parts-daily=   Execute files in directory every beginning day (like run-parts)
-      --run-parts-weekly=  Execute files in directory every beginning week (like run-parts)
-      --run-parts-monthly= Execute files in directory every beginning month (like run-parts)
-  -v, --verbose            verbose mode
-  -V, --version            show version and exit
-      --dumpversion        show only version number and exit
-  -h, --help               show this help message
+      --threads=            Number of parallel executions (default: 20)
+      --default-user=       Default user (default: root)
+      --include=            Include files in directory as system crontabs (with user)
+      --system-defaults     Include standard paths for distribution
+      --run-parts=          Execute files in directory with custom spec (like run-parts; spec-units:ns,us,s,m,h; format:time-spec:path; eg:10s,1m,1h30m)
+      --run-parts-1min=     Execute files in directory every beginning minute (like run-parts)
+      --run-parts-15min=    Execute files in directory every beginning 15 minutes (like run-parts)
+      --run-parts-hourly=   Execute files in directory every beginning hour (like run-parts)
+      --run-parts-daily=    Execute files in directory every beginning day (like run-parts)
+      --run-parts-weekly=   Execute files in directory every beginning week (like run-parts)
+      --run-parts-monthly=  Execute files in directory every beginning month (like run-parts)
+      --allow-unprivileged  Allow daemon to run as non root (unprivileged) user
+  -v, --verbose             verbose mode
+  -V, --version             show version and exit
+      --dumpversion         show only version number and exit
+  -h, --help                show this help message
 ```
 
 Crontab files can be added as arguments or automatic included by using eg. `--include-crond=path/`

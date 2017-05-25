@@ -37,6 +37,7 @@ var opts struct {
     RunPartsDaily             []string  `           long:"run-parts-daily"      description:"Execute files in directory every beginning day (like run-parts)"`
     RunPartsWeekly            []string  `           long:"run-parts-weekly"     description:"Execute files in directory every beginning week (like run-parts)"`
     RunPartsMonthly           []string  `           long:"run-parts-monthly"    description:"Execute files in directory every beginning month (like run-parts)"`
+    AllowUnprivileged         bool      `           long:"allow-unprivileged"   description:"Allow daemon to run as non root (unprivileged) user"`
     Verbose                   bool      `short:"v"  long:"verbose"              description:"verbose mode"`
     ShowVersion               bool      `short:"V"  long:"version"              description:"show version and exit"`
     ShowOnlyVersion           bool      `           long:"dumpversion"          description:"show only version number and exit"`
@@ -339,8 +340,13 @@ func main() {
 
     currentUser, _ := user.Current()
     if currentUser.Uid != "0" {
-        LoggerError.Println("WARNING: go-crond is NOT running as root, disabling user switching")
-        enableUserSwitch = false
+        if opts.AllowUnprivileged {
+            LoggerError.Println("WARNING: go-crond is NOT running as root, disabling user switching")
+            enableUserSwitch = false
+        } else {
+            LoggerError.Println("ERROR: go-crond is NOT running as root, add option --allow-unprivileged if this is ok")
+            os.Exit(1)
+        }
     }
 
     crontabEntries := collectCrontabs(args)
