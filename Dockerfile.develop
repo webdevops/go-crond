@@ -1,11 +1,32 @@
-FROM golang:alpine
+FROM golang:stretch
 
 # Install tools
-RUN apk --no-cache add vim nano bash git
+RUN apt-get update \
+    && apt-get -y -f dist-upgrade \
+    && apt-get install -y -f \
+        build-essential \
+        linux-libc-dev \
+        gcc-multilib \
+        g++-multilib \
+        vim \
+        nano \
+        git \
+        file \
+    && apt-get install -y -f \
+        gcc-6-arm-linux-gnueabi \
+        gcc-arm-none-eabi \
+        gcc-arm-linux-gnueabi \
+        binutils-arm-linux-gnueabi \
+        g++-aarch64-linux-gnu \
+    && ln -s /usr/include/asm-generic /usr/include/asm \
+    && rm -rf /var/lib/apt/lists/* \
+    && apt-get clean -y
+
+RUN useradd guest
 
 # Install deps
-RUN go get github.com/robfig/cron
-RUN go get github.com/jessevdk/go-flags
+RUN go get -u github.com/robfig/cron
+RUN go get -u github.com/jessevdk/go-flags
 
 RUN mkdir -p \
     /etc/cron.d/ \
