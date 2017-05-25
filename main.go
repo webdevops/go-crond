@@ -15,6 +15,7 @@ import (
 )
 
 const (
+    Name    = "go-crond"
     Author  = "webdevops.io"
     Version = "0.4.0"
     LogPrefix = "go-crond: "
@@ -62,7 +63,7 @@ func initArgParser() ([]string) {
 
     // --version
     if (opts.ShowVersion) {
-        fmt.Println(fmt.Sprintf("go-crond version %s", Version))
+        fmt.Println(fmt.Sprintf("%s version %s", Name, Version))
         fmt.Println(fmt.Sprintf("Copyright (C) 2017 %s", Author))
         os.Exit(0)
     }
@@ -330,7 +331,7 @@ func main() {
     initLogger()
     args := initArgParser()
     
-    LoggerInfo.Printf("Starting version %s", Version)
+    LoggerInfo.Printf("Starting %s version %s", Name, Version)
 
     var wg sync.WaitGroup
 
