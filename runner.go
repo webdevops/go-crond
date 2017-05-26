@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"strings"
 	"syscall"
+	"time"
 )
 
 type Runner struct {
@@ -118,6 +119,8 @@ func (r *Runner) cmdFunc(cronjob CrontabEntry, cmdCallback func(*exec.Cmd) bool)
 			taskShell = DEFAULT_SHELL
 		}
 
+		start := time.Now()
+
 		// Init command
 		execCmd := exec.Command(taskShell, "-c", cronjob.Command)
 
@@ -132,10 +135,12 @@ func (r *Runner) cmdFunc(cronjob CrontabEntry, cmdCallback func(*exec.Cmd) bool)
 			// exec job
 			out, err := execCmd.CombinedOutput()
 
+			elapsed := time.Since(start)
+
 			if err != nil {
-				LoggerError.CronjobExecFailed(cronjob, string(out), err)
+				LoggerError.CronjobExecFailed(cronjob, string(out), err, elapsed)
 			} else {
-				LoggerInfo.CronjobExecSuccess(cronjob)
+				LoggerInfo.CronjobExecSuccess(cronjob, elapsed)
 			}
 		}
 	}

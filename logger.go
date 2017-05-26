@@ -5,6 +5,7 @@ import (
 	"log"
 	"strings"
 	"os"
+	"time"
 )
 
 var (
@@ -51,12 +52,12 @@ func (CronLogger CronLogger) CronjobExec(cronjob CrontabEntry) {
 	}
 }
 
-func (CronLogger CronLogger) CronjobExecFailed(cronjob CrontabEntry, output string, err error) {
-	CronLogger.Printf("failed cronjob: cmd:%v out:%v err:%v\n", cronjob.Command, output, err)
+func (CronLogger CronLogger) CronjobExecFailed(cronjob CrontabEntry, output string, err error, elapsed time.Duration) {
+	CronLogger.Printf("failed cronjob: cmd:%v out:%v err:%v time:%s\n", cronjob.Command, output, err, elapsed)
 }
 
-func (CronLogger CronLogger) CronjobExecSuccess(cronjob CrontabEntry) {
+func (CronLogger CronLogger) CronjobExecSuccess(cronjob CrontabEntry, elapsed time.Duration) {
 	if opts.Verbose {
-		CronLogger.Printf("ok: %v\n", CronLogger.CronjobToString(cronjob))
+		CronLogger.Printf("ok: %v time:%s\n", CronLogger.CronjobToString(cronjob), elapsed)
 	}
 }
