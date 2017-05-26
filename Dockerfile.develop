@@ -33,7 +33,18 @@ RUN mkdir -p \
     /etc/cron.daily/ \
     /etc/cron.hourly/ \
     /etc/cron.monthly/ \
-    /etc/cron.weekly/
+    /etc/cron.weekly/ \
+    && echo -n > /etc/crontab \
+    && echo 'SHELL=/bin/sh' >> /etc/crontab \
+    && echo 'PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin' >> /etc/crontab \
+    && echo '' >> /etc/crontab \
+    && echo '# m h dom mon dow user	command' >> /etc/crontab \
+    && echo '17 *	* * *	root    cd / && run-parts --report /etc/cron.hourly' >> /etc/crontab \
+    && echo '25 6	* * *	root	test -x /usr/sbin/anacron || ( cd / && run-parts --report /etc/cron.daily )' >> /etc/crontab \
+    && echo '47 6	* * 7	root	test -x /usr/sbin/anacron || ( cd / && run-parts --report /etc/cron.weekly )' >> /etc/crontab \
+    && echo '52 6	1 * *	root	test -x /usr/sbin/anacron || ( cd / && run-parts --report /etc/cron.monthly )' >> /etc/crontab \
+    && echo '* *	* * *	root	date' >> /etc/crontab \
+    && echo '' >> /etc/crontab
 
 # Add some shell history
 RUN set -x \
@@ -43,7 +54,7 @@ RUN set -x \
     && echo go-crond -v --run-parts-1min=guest:examples/cron.daily/ >> /root/.ash_history \
     && echo go-crond -v --run-parts=10s:guest:examples/cron.daily/ >> /root/.ash_history \
     && echo go-crond -v --run-parts=10s:examples/cron.daily/ >> /root/.ash_history \
-    && echo go-crond -v --system-defaults >> /root/.ash_history
+    && echo go-crond -v >> /root/.ash_history
 
 # Copy source
 COPY . /go/src/go-crond
