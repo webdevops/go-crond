@@ -378,11 +378,29 @@ func main() {
 		}
 	}
 
+	// get current path
+	confDir, err := os.Getwd()
+	if err != nil {
+		LoggerError.Fatalf("Could not get current path: %v", err)
+	}
+
 	// endless daemon-reload loop
 	for {
+		// change to initial directory for fetching crontabs
+		err = os.Chdir(confDir)
+		if err != nil {
+			LoggerError.Fatalf("Cannot switch to path %s: %v", confDir, err)
+		}
+
 		// create new cron runner
 		runner := createCronRunner(args)
 		registerRunnerShutdown(runner)
+
+		// chdir to root to prevent relative path errors
+		os.Chdir("/")
+		if err != nil {
+			LoggerError.Fatalf("Cannot switch to path %s: %v", confDir, err)
+		}
 
 		// start new cron runner
 		runner.Start()
