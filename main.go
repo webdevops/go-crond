@@ -190,7 +190,7 @@ func collectCrontabs(args []string) []CrontabEntry {
 	var ret []CrontabEntry
 
 	// include system default crontab
-	if opts.NoAuto == false {
+	if ! opts.NoAuto {
 		ret = append(ret, includeSystemDefaults()...)
 	}
 
@@ -266,6 +266,8 @@ func collectCrontabs(args []string) []CrontabEntry {
 func includeSystemDefaults() []CrontabEntry {
 	var ret []CrontabEntry
 
+	systemDetected := false
+
 	// ----------------------
 	// Alpine
 	// ----------------------
@@ -275,6 +277,8 @@ func includeSystemDefaults() []CrontabEntry {
 		if checkIfDirectoryExists("/etc/crontabs") {
 			ret = append(ret, includePathForCrontabs("/etc/crontabs", opts.DefaultUser)...)
 		}
+
+		systemDetected = true
 	}
 
 	// ----------------------
@@ -286,6 +290,8 @@ func includeSystemDefaults() []CrontabEntry {
 		if checkIfFileExists("/etc/crontabs") {
 			ret = append(ret, includePathForCrontabs("/etc/crontabs", CRONTAB_TYPE_SYSTEM)...)
 		}
+
+		systemDetected = true
 	}
 
 	// ----------------------
@@ -297,22 +303,36 @@ func includeSystemDefaults() []CrontabEntry {
 		if checkIfFileExists("/etc/crontab") {
 			ret = append(ret, includePathForCrontabs("/etc/crontab", CRONTAB_TYPE_SYSTEM)...)
 		}
+
+		systemDetected = true
 	}
 
 	// ----------------------
 	// Debian
 	// ----------------------
-	if checkIfFileExistsAndOwnedByRoot("/etc/redhat-release") {
+	if checkIfFileExistsAndOwnedByRoot("/etc/debian_version") {
 		LoggerInfo.Println(" --> detected Debian family, using distribution defaults")
 
 		if checkIfFileExists("/etc/crontab") {
 			ret = append(ret, includePathForCrontabs("/etc/crontab", CRONTAB_TYPE_SYSTEM)...)
 		}
+
+		systemDetected = true
 	}
 
 	// ----------------------
 	// General
 	// ----------------------
+	if ! systemDetected {
+		if checkIfFileExists("/etc/crontab") {
+			ret = append(ret, includePathForCrontabs("/etc/crontab", CRONTAB_TYPE_SYSTEM)...)
+		}
+
+		if checkIfFileExists("/etc/crontabs") {
+			ret = append(ret, includePathForCrontabs("/etc/crontabs", CRONTAB_TYPE_SYSTEM)...)
+		}
+	}
+
 	if checkIfDirectoryExists("/etc/cron.d") {
 		ret = append(ret, includePathForCrontabs("/etc/cron.d", CRONTAB_TYPE_SYSTEM)...)
 	}
