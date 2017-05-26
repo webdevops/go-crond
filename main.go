@@ -27,7 +27,7 @@ var opts struct {
 	ThreadCount         int      `           long:"threads"              description:"Number of parallel executions" default:"20"`
 	DefaultUser         string   `           long:"default-user"         description:"Default user"                  default:"root"`
 	IncludeCronD        []string `           long:"include"              description:"Include files in directory as system crontabs (with user)"`
-	UseSystemDefaults   bool     `           long:"system-defaults"      description:"Include standard paths for distribution"`
+	NoAuto              bool     `           long:"no-auto"              description:"Disable automatic system crontab detection"`
 	RunParts            []string `           long:"run-parts"            description:"Execute files in directory with custom spec (like run-parts; spec-units:ns,us,s,m,h; format:time-spec:path; eg:10s,1m,1h30m)"`
 	RunParts1m          []string `           long:"run-parts-1min"       description:"Execute files in directory every beginning minute (like run-parts)"`
 	RunParts15m         []string `           long:"run-parts-15min"      description:"Execute files in directory every beginning 15 minutes (like run-parts)"`
@@ -191,6 +191,11 @@ func parseCrontab(path string, username string) []CrontabEntry {
 func collectCrontabs(args []string) []CrontabEntry {
 	var ret []CrontabEntry
 
+	// include system default crontab
+	if opts.NoAuto == false {
+		ret = append(ret, includeSystemDefaults()...)
+	}
+
 	// args: crontab files as normal arguments
 	for _, crontabPath := range args {
 		crontabUser := CRONTAB_TYPE_SYSTEM
@@ -255,10 +260,6 @@ func collectCrontabs(args []string) []CrontabEntry {
 	// --run-parts-monthly
 	if len(opts.RunPartsMonthly) >= 1 {
 		ret = append(ret, includeRunPartsDirectories("@monthly", opts.RunPartsMonthly)...)
-	}
-
-	if opts.UseSystemDefaults {
-		ret = append(ret, includeSystemDefaults()...)
 	}
 
 	return ret
