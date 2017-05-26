@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	flags "github.com/jessevdk/go-flags"
-	"log"
 	"os"
 	"os/signal"
 	"os/user"
@@ -77,14 +76,6 @@ func initArgParser() []string {
 	}
 
 	return args
-}
-
-var LoggerInfo CronLogger
-var LoggerError CronLogger
-
-func initLogger() {
-	LoggerInfo = CronLogger{log.New(os.Stdout, LogPrefix, 0)}
-	LoggerError = CronLogger{log.New(os.Stderr, LogPrefix, 0)}
 }
 
 // Log error object as message

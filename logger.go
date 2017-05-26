@@ -4,7 +4,18 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"os"
 )
+
+var (
+	LoggerInfo CronLogger
+	LoggerError CronLogger
+)
+
+func initLogger() {
+	LoggerInfo = CronLogger{log.New(os.Stdout, LogPrefix, 0)}
+	LoggerError = CronLogger{log.New(os.Stderr, LogPrefix, 0)}
+}
 
 type CronLogger struct {
 	*log.Logger
