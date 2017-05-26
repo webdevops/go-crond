@@ -7,7 +7,6 @@ import (
 	"os/signal"
 	"os/user"
 	"path/filepath"
-	"runtime"
 	"strings"
 	"syscall"
 )
@@ -24,7 +23,6 @@ const (
 )
 
 var opts struct {
-	ThreadCount         int      `           long:"threads"              description:"Number of parallel executions" default:"20"`
 	DefaultUser         string   `           long:"default-user"         description:"Default user"                  default:"root"`
 	IncludeCronD        []string `           long:"include"              description:"Include files in directory as system crontabs (with user)"`
 	NoAuto              bool     `           long:"no-auto"              description:"Disable automatic system crontab detection"`
@@ -325,7 +323,6 @@ func includeSystemDefaults() []CrontabEntry {
 func createCronRunner(args []string) *Runner {
 	crontabEntries := collectCrontabs(args)
 
-	runtime.GOMAXPROCS(opts.ThreadCount)
 	runner := NewRunner()
 
 	for _, crontabEntry := range crontabEntries {
