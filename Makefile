@@ -1,6 +1,7 @@
 SOURCE = $(wildcard *.go)
 TAG ?= $(shell git describe --tags)
-GOBUILD = go build -ldflags '-w'
+GOBUILD_DYNAMIC = go build --ldflags '\''-w'\''
+GOBUILD_STATIC = go build --ldflags '\''-linkmode external -extldflags "-static" -w'\''
 .PHONY: docker docker-dev docker-run-dev all build test clean release
 
 ALL = \
@@ -45,27 +46,31 @@ osx = darwin
 
 build/go-crond-64-osx: $(SOURCE)
 	@mkdir -p $(@D)
-	CGO_ENABLED=1 GOOS=$(firstword $($*) $*) GOARCH=amd64 $(GOBUILD) -o $@
+	CGO_ENABLED=1 GOOS=$(firstword $($*) $*) GOARCH=amd64 $(GOBUILD_DYNAMIC) -o $@
 
 build/go-crond-32-osx: $(SOURCE)
 	@mkdir -p $(@D)
-	CGO_ENABLED=1 GOOS=$(firstword $($*) $*) GOARCH=386 $(GOBUILD) -o $@
+	CGO_ENABLED=1 GOOS=$(firstword $($*) $*) GOARCH=386 $(GOBUILD_DYNAMIC) -o $@
 
 build/go-crond-64-linux: $(SOURCE)
 	@mkdir -p $(@D)
-	docker run -ti --rm -w "$$(pwd)" -v "$$(pwd):$$(pwd)" --name=cron webdevops/go-crond:develop sh -c 'CGO_ENABLED=1 GOOS=$(firstword $($*) $*) GOARCH=amd64 $(GOBUILD) -o $@'
+	docker run -ti --rm -w "$$(pwd)" -v "$$(pwd):$$(pwd)" --name=cron webdevops/go-crond:develop sh -c 'CGO_ENABLED=1 GOOS=$(firstword $($*) $*) GOARCH=amd64 $(GOBUILD_DYNAMIC) -o $@'
+	docker run -ti --rm -w "$$(pwd)" -v "$$(pwd):$$(pwd)" --name=cron webdevops/go-crond:develop sh -c 'CGO_ENABLED=1 GOOS=$(firstword $($*) $*) GOARCH=amd64 $(GOBUILD_STATIC) -o ${@}-static'
 
 build/go-crond-32-linux: $(SOURCE)
 	@mkdir -p $(@D)
-	docker run -ti --rm -w "$$(pwd)" -v "$$(pwd):$$(pwd)" --name=cron webdevops/go-crond:develop sh -c 'CGO_ENABLED=1 GOOS=$(firstword $($*) $*) GOARCH=386 $(GOBUILD) -o $@'
+	docker run -ti --rm -w "$$(pwd)" -v "$$(pwd):$$(pwd)" --name=cron webdevops/go-crond:develop sh -c 'CGO_ENABLED=1 GOOS=$(firstword $($*) $*) GOARCH=386 $(GOBUILD_DYNAMIC) -o $@'
+	docker run -ti --rm -w "$$(pwd)" -v "$$(pwd):$$(pwd)" --name=cron webdevops/go-crond:develop sh -c 'CGO_ENABLED=1 GOOS=$(firstword $($*) $*) GOARCH=386 $(GOBUILD_STATIC) -o ${@}-static'
 
 build/go-crond-arm-linux: $(SOURCE)
 	@mkdir -p $(@D)
-	docker run -ti --rm -w "$$(pwd)" -v "$$(pwd):$$(pwd)" --name=cron webdevops/go-crond:develop sh -c 'CC=arm-linux-gnueabi-gcc CGO_ENABLED=1 GOOS=linux GOARCH=arm GOARM=6 $(GOBUILD) -o $@'
+	docker run -ti --rm -w "$$(pwd)" -v "$$(pwd):$$(pwd)" --name=cron webdevops/go-crond:develop sh -c 'CC=arm-linux-gnueabi-gcc CGO_ENABLED=1 GOOS=linux GOARCH=arm GOARM=6 $(GOBUILD_DYNAMIC) -o $@'
+	docker run -ti --rm -w "$$(pwd)" -v "$$(pwd):$$(pwd)" --name=cron webdevops/go-crond:develop sh -c 'CC=arm-linux-gnueabi-gcc CGO_ENABLED=1 GOOS=linux GOARCH=arm GOARM=6 $(GOBUILD_STATIC) -o ${@}-static'
 
 build/go-crond-arm64-linux: $(SOURCE)
 	@mkdir -p $(@D)
-	docker run -ti --rm -w "$$(pwd)" -v "$$(pwd):$$(pwd)" --name=cron webdevops/go-crond:develop sh -c 'CC=aarch64-linux-gnu-gcc CGO_ENABLED=1 GOOS=linux GOARCH=arm64 $(GOBUILD) -o $@'
+	docker run -ti --rm -w "$$(pwd)" -v "$$(pwd):$$(pwd)" --name=cron webdevops/go-crond:develop sh -c 'CC=aarch64-linux-gnu-gcc CGO_ENABLED=1 GOOS=linux GOARCH=arm64 $(GOBUILD_DYNAMIC) -o $@'
+	docker run -ti --rm -w "$$(pwd)" -v "$$(pwd):$$(pwd)" --name=cron webdevops/go-crond:develop sh -c 'CC=aarch64-linux-gnu-gcc CGO_ENABLED=1 GOOS=linux GOARCH=arm64 $(GOBUILD_STATIC) -o ${@}-static'
 
 release: build
 	github-release release -u webdevops -r go-crond -t "$(TAG)" -n "$(TAG)" --description "$(TAG)"
