@@ -1,5 +1,6 @@
 SOURCE = $(wildcard *.go)
 TAG ?= $(shell git describe --tags)
+GOBUILD_OSX = go build --ldflags '-w'
 GOBUILD_DYNAMIC = go build --ldflags '\''-w'\''
 GOBUILD_STATIC = go build --ldflags '\''-linkmode external -extldflags "-static" -w'\''
 .PHONY: docker docker-dev docker-run-dev all build test clean release
@@ -46,11 +47,11 @@ osx = darwin
 
 build/go-crond-64-osx: $(SOURCE)
 	@mkdir -p $(@D)
-	CGO_ENABLED=1 GOOS=$(firstword $($*) $*) GOARCH=amd64 $(GOBUILD_DYNAMIC) -o $@
+	CGO_ENABLED=1 GOOS=$(firstword $($*) $*) GOARCH=amd64 $(GOBUILD_OSX) -o $@
 
 build/go-crond-32-osx: $(SOURCE)
 	@mkdir -p $(@D)
-	CGO_ENABLED=1 GOOS=$(firstword $($*) $*) GOARCH=386 $(GOBUILD_DYNAMIC) -o $@
+	CGO_ENABLED=1 GOOS=$(firstword $($*) $*) GOARCH=386 $(GOBUILD_OSX) -o $@
 
 build/go-crond-64-linux: $(SOURCE)
 	@mkdir -p $(@D)
