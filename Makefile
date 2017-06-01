@@ -74,9 +74,9 @@ build/go-crond-arm64-linux: $(SOURCE)
 	docker run -ti --rm -w "$$(pwd)" -v "$$(pwd):$$(pwd)" --name=cron webdevops/go-crond:develop sh -c 'CC=aarch64-linux-gnu-gcc CGO_ENABLED=1 GOOS=linux GOARCH=arm64 $(GOBUILD_DYNAMIC) -o ${@}-dynamic'
 
 
-release: build
+release:
 	github-release release -u webdevops -r go-crond -t "$(TAG)" -n "$(TAG)" --description "$(TAG)"
-	@for x in $(ALL); do \
+	@for x in build/*; do \
 		echo "Uploading $$x" && \
 		github-release upload -u webdevops \
                               -r go-crond \
