@@ -3,7 +3,7 @@ TAG ?= $(shell git describe --tags)
 GOBUILD_OSX = go build --ldflags '-w'
 GOBUILD_DYNAMIC = go build --ldflags '\''-w'\''
 GOBUILD_STATIC = go build --ldflags '\''-linkmode external -extldflags "-static" -w'\''
-.PHONY: docker docker-dev docker-run-dev all build test clean release
+.PHONY: docker docker-dev docker-run-dev all build test clean release dependencies
 
 ALL = \
 	$(foreach arch,64 32,\
@@ -27,11 +27,11 @@ build-env: docker-dev
 
 all: test build
 
-dependences:
+dependencies:
 	go get -u github.com/robfig/cron
 	go get -u github.com/jessevdk/go-flags
 
-build: clean dependences test $(ALL)
+build: clean dependencies test $(ALL)
 
 # cram is a python app, so 'easy_install/pip install cram' to run tests
 test:
