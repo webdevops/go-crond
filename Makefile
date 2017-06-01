@@ -39,7 +39,7 @@ test:
 	#cram tests/main.test
 
 clean:
-	rm -f $(ALL)
+	rm -rf build/
 
 # os is determined as thus: if variable of suffix exists, it's taken, if not, then
 # suffix itself is taken
