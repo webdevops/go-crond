@@ -94,7 +94,7 @@ GOCROND_VERSION=0.6.0 \
 
 ## Docker images
 
-| Image                        | Description                                                         |
-|:-----------------------------|:--------------------------------------------------------------------|
-| `webdevops/go-crond:latest`  | Latest release, binary only                                         |
-| `webdevops/go-crond:master`  | Current development version in branch `master`, with golang runtime |
+| Image                       | Description                                    |
+|:----------------------------|:-----------------------------------------------|
+| `webdevops/go-crond:latest` | Latest release, binary only                    |
+| `webdevops/go-crond:master` | Current development version in branch `master` |
