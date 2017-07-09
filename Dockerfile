@@ -9,6 +9,6 @@ RUN apk --no-cache add git \
     && chmod +x go-crond \
     && ./go-crond --version
 
-FROM golang:alpine
+FROM alpine
 COPY --from=buildenv /go/src/go-crond/go-crond /usr/local/bin
 CMD ["go-crond"]
