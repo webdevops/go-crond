@@ -88,19 +88,23 @@ func logFatalErrorAndExit(err error, exitCode int) {
 
 func findFilesInPaths(pathlist []string, callback func(os.FileInfo, string)) {
 	for _, path := range pathlist {
-		filepath.Walk(path, func(path string, f os.FileInfo, err error) error {
-			path, _ = filepath.Abs(path)
+		if stat, err := os.Stat(path); err == nil && stat.IsDir() {
+			filepath.Walk(path, func(path string, f os.FileInfo, err error) error {
+				path, _ = filepath.Abs(path)
 
-			if f.IsDir() {
+				if f.IsDir() {
+					return nil
+				}
+
+				if checkIfFileIsValid(f, path) {
+					callback(f, path)
+				}
+
 				return nil
-			}
-
-			if checkIfFileIsValid(f, path) {
-				callback(f, path)
-			}
-
-			return nil
-		})
+			})
+		} else {
+			LoggerInfo.Printf("Path %s does not exists\n", path)
+		}
 	}
 }
 
