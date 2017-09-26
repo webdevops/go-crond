@@ -371,8 +371,8 @@ func main() {
 
 	// check if user switching is possible (have to be root)
 	opts.EnableUserSwitching = true
-	currentUser, _ := user.Current()
-	if currentUser.Uid != "0" {
+	currentUser, err := user.Current()
+	if err != nil || currentUser.Uid != "0" {
 		if opts.AllowUnprivileged {
 			LoggerError.Println("WARNING: go-crond is NOT running as root, disabling user switching")
 			opts.EnableUserSwitching = false
