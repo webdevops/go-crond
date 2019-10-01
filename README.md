@@ -47,7 +47,7 @@ Application Options:
   -h, --help                show this help message
 ```
 
-Crontab files can be added as arguments or automatic included by using eg. `--include-crond=path/`
+Crontab files can be added as arguments or automatic included by using eg. `--include=crond-path/`
 
 ### Examples
 
