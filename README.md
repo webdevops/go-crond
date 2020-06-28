@@ -44,7 +44,8 @@ Application Options:
   -V, --version             show version and exit
       --dumpversion         show only version number and exit
   -h, --help                show this help message
-      --bind=               Server address (eg. prometheus metrics) (default: :8080) [$SERVER_BIND]
+      --server.bind=        Server address (eg. prometheus metrics) (default: :8080) [$SERVER_BIND]
+      --server.metrics      Enable prometheus metrics (do not use senstive informations in commands -> use environment variables or files for storing these informations) [$SERVER_METRICS]
 ```
 
 Crontab files can be added as arguments or automatic included by using eg. `--include=crond-path/`
@@ -98,3 +99,17 @@ GOCROND_VERSION=0.6.1 \
 |:----------------------------|:-----------------------------------------------|
 | `webdevops/go-crond:latest` | Latest release, binary only                    |
 | `webdevops/go-crond:master` | Current development version in branch `master` |
+
+## Metrics
+
+go-crond exposes [Prometheus][] metrics on `:8080/metrics` if enabled.
+
+
+| Metric                      | Description                                     |
+|:----------------------------|:------------------------------------------------|
+| `gocrond_task_run_count`    | Counter for each executed task                  |
+| `gocrond_task_run_success`  | Last status (0=failed, 1=success) for each task |
+| `gocrond_task_run_time`     | Last exec time (unix timestamp) for each task   |
+| `gocrond_task_run_duration` | Duration of last exec                           |
+
+[Prometheus]: https://prometheus.io/

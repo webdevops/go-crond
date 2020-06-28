@@ -45,7 +45,8 @@ var opts struct {
 	ShowHelp            bool `short:"h"  long:"help"          description:"show this help message"`
 
 	// server settings
-	ServerBind string `long:"bind" env:"SERVER_BIND"          description:"Server address (eg. prometheus metrics)" default:":8080"`
+	ServerBind string  `long:"server.bind"     env:"SERVER_BIND"     description:"Server address (eg. prometheus metrics)" default:":8080"`
+	ServerMetrics bool `long:"server.metrics"  env:"SERVER_METRICS"  description:"Enable prometheus metrics (do not use senstive informations in commands -> use environment variables or files for storing these informations)"`
 }
 
 var argparser *flags.Parser
@@ -439,7 +440,16 @@ func main() {
 func startHttpServer() {
 	go func() {
 		if opts.ServerBind != "" {
-			http.Handle("/metrics", promhttp.Handler())
+			// healthz
+			http.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
+				if _, err := fmt.Fprint(w, "Ok"); err != nil {
+					LoggerError.Println(err)
+				}
+			})
+
+			if opts.ServerMetrics {
+				http.Handle("/metrics", promhttp.Handler())
+			}
 			if err := http.ListenAndServe(opts.ServerBind, nil); err != nil {
 				panic(err)
 			}

@@ -17,6 +17,7 @@ type Runner struct {
 	cron *cron.Cron
 
 	prometheus struct {
+		taskRunCount    *prometheus.CounterVec
 		taskRunSuccess  *prometheus.GaugeVec
 		taskRunTime     *prometheus.GaugeVec
 		taskRunDuration *prometheus.GaugeVec
@@ -27,6 +28,15 @@ func NewRunner() *Runner {
 	r := &Runner{
 		cron: cron.New(),
 	}
+
+	r.prometheus.taskRunCount = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "gocrond_task_run_count",
+			Help: "gocrond task run count",
+		},
+		[]string{"cronSpec", "cronUser", "cronCommand"},
+	)
+	prometheus.MustRegister(r.prometheus.taskRunCount)
 
 	r.prometheus.taskRunSuccess = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
@@ -172,6 +182,7 @@ func (r *Runner) cmdFunc(cronjob CrontabEntry, cmdCallback func(*exec.Cmd) bool)
 
 			elapsed := time.Since(start)
 
+			r.prometheus.taskRunCount.With(r.cronjobToPrometheusLabels(cronjob)).Inc()
 			r.prometheus.taskRunDuration.With(r.cronjobToPrometheusLabels(cronjob)).Set(elapsed.Seconds())
 			r.prometheus.taskRunTime.With(r.cronjobToPrometheusLabels(cronjob)).SetToCurrentTime()
 
