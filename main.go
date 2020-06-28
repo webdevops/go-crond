@@ -14,12 +14,14 @@ import (
 const (
 	Name      = "go-crond"
 	Author    = "webdevops.io"
-	Version   = "0.6.1"
 	LogPrefix = "go-crond: "
+	CRONTAB_TYPE_SYSTEM = ""
 )
 
-const (
-	CRONTAB_TYPE_SYSTEM = ""
+var (
+	// Git version information
+	gitCommit = "<unknown>"
+	gitTag    = "<unknown>"
 )
 
 var opts struct {
@@ -56,14 +58,14 @@ func initArgParser() []string {
 
 	// --dumpversion
 	if opts.ShowOnlyVersion {
-		fmt.Println(Version)
+		fmt.Println(gitTag)
 		os.Exit(0)
 	}
 
 	// --version
 	if opts.ShowVersion {
-		fmt.Println(fmt.Sprintf("%s version %s", Name, Version))
-		fmt.Println(fmt.Sprintf("Copyright (C) 2017 %s", Author))
+		fmt.Println(fmt.Sprintf("%s version %s (%s)", Name, gitTag, gitCommit))
+		fmt.Println(fmt.Sprintf("Copyright (C) 2020 %s", Author))
 		os.Exit(0)
 	}
 
@@ -89,7 +91,7 @@ func logFatalErrorAndExit(err error, exitCode int) {
 func findFilesInPaths(pathlist []string, callback func(os.FileInfo, string)) {
 	for _, path := range pathlist {
 		if stat, err := os.Stat(path); err == nil && stat.IsDir() {
-			filepath.Walk(path, func(path string, f os.FileInfo, err error) error {
+			err := filepath.Walk(path, func(path string, f os.FileInfo, err error) error {
 				path, _ = filepath.Abs(path)
 
 				if f.IsDir() {
@@ -102,6 +104,9 @@ func findFilesInPaths(pathlist []string, callback func(os.FileInfo, string)) {
 
 				return nil
 			})
+			if err != nil {
+				LoggerError.Fatal(err)
+			}
 		} else {
 			LoggerInfo.Printf("Path %s does not exists\n", path)
 		}
@@ -351,9 +356,13 @@ func createCronRunner(args []string) *Runner {
 
 	for _, crontabEntry := range crontabEntries {
 		if opts.EnableUserSwitching {
-			runner.AddWithUser(crontabEntry)
+			if err := runner.AddWithUser(crontabEntry); err != nil {
+				LoggerError.Fatal(err)
+			}
 		} else {
-			runner.Add(crontabEntry)
+			if err := runner.Add(crontabEntry); err != nil {
+				LoggerError.Fatal(err)
+			}
 		}
 	}
 
@@ -367,7 +376,7 @@ func main() {
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, syscall.SIGHUP)
 
-	LoggerInfo.Printf("Starting %s version %s", Name, Version)
+	LoggerInfo.Printf("Starting %s version %s (%s)", Name, gitTag, gitCommit)
 
 	// check if user switching is possible (have to be root)
 	opts.EnableUserSwitching = true
@@ -401,7 +410,7 @@ func main() {
 		registerRunnerShutdown(runner)
 
 		// chdir to root to prevent relative path errors
-		os.Chdir("/")
+		err = os.Chdir("/")
 		if err != nil {
 			LoggerError.Fatalf("Cannot switch to path %s: %v", confDir, err)
 		}

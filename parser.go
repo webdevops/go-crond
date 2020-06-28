@@ -26,11 +26,6 @@ var (
 	cronjobUserRegex   = regexp.MustCompile(CRONJOB_USER)
 )
 
-type EnvVar struct {
-	Name  string
-	Value string
-}
-
 type CrontabEntry struct {
 	Spec    string
 	User    string

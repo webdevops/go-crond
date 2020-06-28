@@ -1,7 +1,5 @@
-build
-go-crond
-Dockerfile
-.git
-.editorconfig
-.gitignore
+/build
+/vendor
+/go-crond
+*.exe
 .idea
