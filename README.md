@@ -29,10 +29,9 @@ Usage:
   go-crond
 
 Application Options:
-      --threads=            Number of parallel executions (default: 20)
       --default-user=       Default user (default: root)
       --include=            Include files in directory as system crontabs (with user)
-      --system-defaults     Include standard paths for distribution
+      --no-auto             Disable automatic system crontab detection
       --run-parts=          Execute files in directory with custom spec (like run-parts; spec-units:ns,us,s,m,h; format:time-spec:path; eg:10s,1m,1h30m)
       --run-parts-1min=     Execute files in directory every beginning minute (like run-parts)
       --run-parts-15min=    Execute files in directory every beginning 15 minutes (like run-parts)
@@ -87,7 +86,7 @@ Run crond with run-parts with custom time spec and different user:
 ## Installation
 
 ```bash
-GOCROND_VERSION=0.6.0 \
+GOCROND_VERSION=0.6.1 \
 && wget -O /usr/local/bin/go-crond https://github.com/webdevops/go-crond/releases/download/$GOCROND_VERSION/go-crond-64-linux \
 && chmod +x /usr/local/bin/go-crond
 ```
