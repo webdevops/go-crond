@@ -44,6 +44,7 @@ Application Options:
   -V, --version             show version and exit
       --dumpversion         show only version number and exit
   -h, --help                show this help message
+      --bind=               Server address (eg. prometheus metrics) (default: :8080) [$SERVER_BIND]
 ```
 
 Crontab files can be added as arguments or automatic included by using eg. `--include=crond-path/`

@@ -17,8 +17,8 @@ type Runner struct {
 	cron *cron.Cron
 
 	prometheus struct {
-		taskRunSuccess *prometheus.GaugeVec
-		taskRunTime *prometheus.GaugeVec
+		taskRunSuccess  *prometheus.GaugeVec
+		taskRunTime     *prometheus.GaugeVec
 		taskRunDuration *prometheus.GaugeVec
 	}
 }
@@ -33,7 +33,7 @@ func NewRunner() *Runner {
 			Name: "gocrond_task_run_success",
 			Help: "gocrond task run successfull",
 		},
-		[]string{"cronSpec","cronUser","cronCommand"},
+		[]string{"cronSpec", "cronUser", "cronCommand"},
 	)
 	prometheus.MustRegister(r.prometheus.taskRunSuccess)
 
@@ -42,7 +42,7 @@ func NewRunner() *Runner {
 			Name: "gocrond_task_run_time",
 			Help: "gocrond task last run time",
 		},
-		[]string{"cronSpec","cronUser","cronCommand"},
+		[]string{"cronSpec", "cronUser", "cronCommand"},
 	)
 	prometheus.MustRegister(r.prometheus.taskRunTime)
 
@@ -51,7 +51,7 @@ func NewRunner() *Runner {
 			Name: "gocrond_task_run_duration",
 			Help: "gocrond task last run duration",
 		},
-		[]string{"cronSpec","cronUser","cronCommand"},
+		[]string{"cronSpec", "cronUser", "cronCommand"},
 	)
 	prometheus.MustRegister(r.prometheus.taskRunDuration)
 
@@ -189,8 +189,8 @@ func (r *Runner) cmdFunc(cronjob CrontabEntry, cmdCallback func(*exec.Cmd) bool)
 
 func (r *Runner) cronjobToPrometheusLabels(cronjob CrontabEntry) (labels prometheus.Labels) {
 	labels = prometheus.Labels{
-		"cronSpec": cronjob.Spec,
-		"cronUser": cronjob.User,
+		"cronSpec":    cronjob.Spec,
+		"cronUser":    cronjob.User,
 		"cronCommand": cronjob.Command,
 	}
 	return

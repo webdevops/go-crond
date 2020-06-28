@@ -45,8 +45,7 @@ var opts struct {
 	ShowHelp            bool `short:"h"  long:"help"                 description:"show this help message"`
 
 	// server settings
-	ServerBind string `long:"bind"         env:"SERVER_BIND"   description:"Server address" default:":8080"`
-
+	ServerBind string `long:"bind"         env:"SERVER_BIND"   description:"Server address (eg. prometheus metrics)" default:":8080"`
 }
 
 var argparser *flags.Parser
