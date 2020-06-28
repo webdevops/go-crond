@@ -19,7 +19,7 @@ GOBUILD_STATIC = go build --ldflags '\''-w ${LDFLAGS}'\''
 
 all: docker-dev lint build
 
-build:
+build-local:
 	CGO_ENABLED=0 go build -a -ldflags '$(LDFLAGS)' -o $(NAME) .
 
 vendor:
