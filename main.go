@@ -27,25 +27,25 @@ var (
 )
 
 var opts struct {
-	DefaultUser         string   `           long:"default-user"         description:"Default user"                  default:"root"`
-	IncludeCronD        []string `           long:"include"              description:"Include files in directory as system crontabs (with user)"`
-	NoAuto              bool     `           long:"no-auto"              description:"Disable automatic system crontab detection"`
-	RunParts            []string `           long:"run-parts"            description:"Execute files in directory with custom spec (like run-parts; spec-units:ns,us,s,m,h; format:time-spec:path; eg:10s,1m,1h30m)"`
-	RunParts1m          []string `           long:"run-parts-1min"       description:"Execute files in directory every beginning minute (like run-parts)"`
-	RunParts15m         []string `           long:"run-parts-15min"      description:"Execute files in directory every beginning 15 minutes (like run-parts)"`
-	RunPartsHourly      []string `           long:"run-parts-hourly"     description:"Execute files in directory every beginning hour (like run-parts)"`
-	RunPartsDaily       []string `           long:"run-parts-daily"      description:"Execute files in directory every beginning day (like run-parts)"`
-	RunPartsWeekly      []string `           long:"run-parts-weekly"     description:"Execute files in directory every beginning week (like run-parts)"`
-	RunPartsMonthly     []string `           long:"run-parts-monthly"    description:"Execute files in directory every beginning month (like run-parts)"`
-	AllowUnprivileged   bool     `           long:"allow-unprivileged"   description:"Allow daemon to run as non root (unprivileged) user"`
+	DefaultUser         string   `long:"default-user"         description:"Default user"                  default:"root"`
+	IncludeCronD        []string `long:"include"              description:"Include files in directory as system crontabs (with user)"`
+	NoAuto              bool     `long:"no-auto"              description:"Disable automatic system crontab detection"`
+	RunParts            []string `long:"run-parts"            description:"Execute files in directory with custom spec (like run-parts; spec-units:ns,us,s,m,h; format:time-spec:path; eg:10s,1m,1h30m)"`
+	RunParts1m          []string `long:"run-parts-1min"       description:"Execute files in directory every beginning minute (like run-parts)"`
+	RunParts15m         []string `long:"run-parts-15min"      description:"Execute files in directory every beginning 15 minutes (like run-parts)"`
+	RunPartsHourly      []string `long:"run-parts-hourly"     description:"Execute files in directory every beginning hour (like run-parts)"`
+	RunPartsDaily       []string `long:"run-parts-daily"      description:"Execute files in directory every beginning day (like run-parts)"`
+	RunPartsWeekly      []string `long:"run-parts-weekly"     description:"Execute files in directory every beginning week (like run-parts)"`
+	RunPartsMonthly     []string `long:"run-parts-monthly"    description:"Execute files in directory every beginning month (like run-parts)"`
+	AllowUnprivileged   bool     `long:"allow-unprivileged"   description:"Allow daemon to run as non root (unprivileged) user"`
 	EnableUserSwitching bool
-	Verbose             bool `short:"v"  long:"verbose"              description:"verbose mode"`
-	ShowVersion         bool `short:"V"  long:"version"              description:"show version and exit"`
-	ShowOnlyVersion     bool `           long:"dumpversion"          description:"show only version number and exit"`
-	ShowHelp            bool `short:"h"  long:"help"                 description:"show this help message"`
+	Verbose             bool `short:"v"  long:"verbose"       description:"verbose mode"`
+	ShowVersion         bool `short:"V"  long:"version"       description:"show version and exit"`
+	ShowOnlyVersion     bool `long:"dumpversion"              description:"show only version number and exit"`
+	ShowHelp            bool `short:"h"  long:"help"          description:"show this help message"`
 
 	// server settings
-	ServerBind string `long:"bind"         env:"SERVER_BIND"   description:"Server address (eg. prometheus metrics)" default:":8080"`
+	ServerBind string `long:"bind" env:"SERVER_BIND"          description:"Server address (eg. prometheus metrics)" default:":8080"`
 }
 
 var argparser *flags.Parser
