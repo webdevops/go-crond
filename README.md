@@ -107,6 +107,7 @@ go-crond exposes [Prometheus][] metrics on `:8080/metrics` if enabled.
 
 | Metric                      | Description                                     |
 |:----------------------------|:------------------------------------------------|
+| `gocrond_task_info`         | List of all cronjobs                            |
 | `gocrond_task_run_count`    | Counter for each executed task                  |
 | `gocrond_task_run_success`  | Last status (0=failed, 1=success) for each task |
 | `gocrond_task_run_time`     | Last exec time (unix timestamp) for each task   |
