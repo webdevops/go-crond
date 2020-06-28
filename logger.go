@@ -3,13 +3,13 @@ package main
 import (
 	"fmt"
 	"log"
-	"strings"
 	"os"
+	"strings"
 	"time"
 )
 
 var (
-	LoggerInfo CronLogger
+	LoggerInfo  CronLogger
 	LoggerError CronLogger
 )
 

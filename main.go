@@ -12,9 +12,9 @@ import (
 )
 
 const (
-	Name      = "go-crond"
-	Author    = "webdevops.io"
-	LogPrefix = "go-crond: "
+	Name                = "go-crond"
+	Author              = "webdevops.io"
+	LogPrefix           = "go-crond: "
 	CRONTAB_TYPE_SYSTEM = ""
 )
 
@@ -199,7 +199,7 @@ func collectCrontabs(args []string) []CrontabEntry {
 	var ret []CrontabEntry
 
 	// include system default crontab
-	if ! opts.NoAuto {
+	if !opts.NoAuto {
 		ret = append(ret, includeSystemDefaults()...)
 	}
 
@@ -332,7 +332,7 @@ func includeSystemDefaults() []CrontabEntry {
 	// ----------------------
 	// General
 	// ----------------------
-	if ! systemDetected {
+	if !systemDetected {
 		if checkIfFileExists("/etc/crontab") {
 			ret = append(ret, includePathForCrontabs("/etc/crontab", CRONTAB_TYPE_SYSTEM)...)
 		}
