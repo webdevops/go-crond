@@ -18,7 +18,6 @@ import (
 const (
 	Name                = "go-crond"
 	Author              = "webdevops.io"
-	LogPrefix           = "go-crond: "
 	CRONTAB_TYPE_SYSTEM = ""
 )
 
@@ -476,7 +475,7 @@ func registerRunnerShutdown(runner *Runner) {
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
 	go func() {
 		s := <-c
-		log.Infof("Got signal: ", s)
+		log.Infof("Got signal: %v", s)
 		runner.Stop()
 
 		log.Infof("Terminated")
