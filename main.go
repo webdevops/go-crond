@@ -4,6 +4,7 @@ import (
 	"fmt"
 	flags "github.com/jessevdk/go-flags"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	log "github.com/sirupsen/logrus"
 	"net/http"
 	"os"
 	"os/signal"
@@ -12,7 +13,6 @@ import (
 	"runtime"
 	"strings"
 	"syscall"
-	log "github.com/sirupsen/logrus"
 )
 
 const (
@@ -45,12 +45,12 @@ var opts struct {
 	ShowHelp            bool `short:"h"  long:"help"          description:"show this help message"`
 
 	// logger
-	Verbose             bool `short:"v"  long:"verbose"       description:"verbose mode"`
-	LogJson             bool `           long:"log.json"      description:"Switch log output to json format"`
+	Verbose bool `short:"v"  long:"verbose"       description:"verbose mode"`
+	LogJson bool `           long:"log.json"      description:"Switch log output to json format"`
 
 	// server settings
-	ServerBind string  `long:"server.bind"     env:"SERVER_BIND"     description:"Server address (eg. prometheus metrics)" default:":8080"`
-	ServerMetrics bool `long:"server.metrics"  env:"SERVER_METRICS"  description:"Enable prometheus metrics (do not use senstive informations in commands -> use environment variables or files for storing these informations)"`
+	ServerBind    string `long:"server.bind"     env:"SERVER_BIND"     description:"Server address (eg. prometheus metrics)" default:":8080"`
+	ServerMetrics bool   `long:"server.metrics"  env:"SERVER_METRICS"  description:"Enable prometheus metrics (do not use senstive informations in commands -> use environment variables or files for storing these informations)"`
 }
 
 var argparser *flags.Parser

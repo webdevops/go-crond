@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/robfig/cron"
+	log "github.com/sirupsen/logrus"
 	"os"
 	"os/exec"
 	"os/user"
@@ -11,7 +12,6 @@ import (
 	"strings"
 	"syscall"
 	"time"
-	log "github.com/sirupsen/logrus"
 )
 
 type Runner struct {
