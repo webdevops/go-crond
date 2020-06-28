@@ -140,7 +140,7 @@ func (r *Runner) cmdFunc(cronjob CrontabEntry, cmdCallback func(*exec.Cmd) bool)
 			if err != nil {
 				LoggerError.CronjobExecFailed(cronjob, string(out), err, elapsed)
 			} else {
-				LoggerInfo.CronjobExecSuccess(cronjob, elapsed)
+				LoggerInfo.CronjobExecSuccess(cronjob, string(out), err, elapsed)
 			}
 		}
 	}
