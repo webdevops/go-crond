@@ -31,7 +31,7 @@ Usage:
 Application Options:
       --default-user=       Default user (default: root)
       --include=            Include files in directory as system crontabs (with user)
-      --no-auto             Disable automatic system crontab detection
+      --auto                Enable automatic system crontab detection
       --run-parts=          Execute files in directory with custom spec (like run-parts; spec-units:ns,us,s,m,h; format:time-spec:path; eg:10s,1m,1h30m)
       --run-parts-1min=     Execute files in directory every beginning minute (like run-parts)
       --run-parts-15min=    Execute files in directory every beginning 15 minutes (like run-parts)
@@ -40,12 +40,14 @@ Application Options:
       --run-parts-weekly=   Execute files in directory every beginning week (like run-parts)
       --run-parts-monthly=  Execute files in directory every beginning month (like run-parts)
       --allow-unprivileged  Allow daemon to run as non root (unprivileged) user
-  -v, --verbose             verbose mode
   -V, --version             show version and exit
       --dumpversion         show only version number and exit
   -h, --help                show this help message
+  -v, --verbose             verbose mode
+      --log.json            Switch log output to json format
       --server.bind=        Server address (eg. prometheus metrics) (default: :8080) [$SERVER_BIND]
       --server.metrics      Enable prometheus metrics (do not use senstive informations in commands -> use environment variables or files for storing these informations) [$SERVER_METRICS]
+
 ```
 
 Crontab files can be added as arguments or automatic included by using eg. `--include=crond-path/`

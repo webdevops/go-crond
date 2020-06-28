@@ -47,7 +47,7 @@ var opts struct {
 
 	// logger
 	Verbose             bool `short:"v"  long:"verbose"       description:"verbose mode"`
-	LogJson             bool `           long:"log.json"      description:"Output json content"`
+	LogJson             bool `           long:"log.json"      description:"Switch log output to json format"`
 
 	// server settings
 	ServerBind string  `long:"server.bind"     env:"SERVER_BIND"     description:"Server address (eg. prometheus metrics)" default:":8080"`
