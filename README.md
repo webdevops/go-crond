@@ -26,7 +26,7 @@ Using https://godoc.org/github.com/robfig/cron
 
 ```
 Usage:
-  go-crond
+  go-crond [user:crontab] [user:crontab]…
 
 Application Options:
       --default-user=       Default user (default: root)
