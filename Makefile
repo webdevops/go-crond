@@ -51,10 +51,10 @@ docker-dev:
 	docker build -f Dockerfile.develop . -t webdevops/go-crond:develop
 
 docker-run: docker-dev
-	docker run -ti --rm -w "$$(pwd)" -v "$$(pwd):$$(pwd):ro" --name=cron webdevops/go-crond:develop bash
+	docker run -ti --rm -w "$$(pwd)" -v "$$(pwd):$$(pwd):ro" -p 8080:8080 --name=cron webdevops/go-crond:develop bash
 
 build-env: docker-dev
-	docker run -ti --rm -w "$$(pwd)" -v "$$(pwd):$$(pwd)" --name=cron webdevops/go-crond:develop bash
+	docker run -ti --rm -w "$$(pwd)" -v "$$(pwd):$$(pwd)" -p 8080:8080 --name=cron webdevops/go-crond:develop bash
 
 all: test build
 

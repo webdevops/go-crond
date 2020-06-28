@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 	flags "github.com/jessevdk/go-flags"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"net/http"
 	"os"
 	"os/signal"
 	"os/user"
@@ -41,6 +43,10 @@ var opts struct {
 	ShowVersion         bool `short:"V"  long:"version"              description:"show version and exit"`
 	ShowOnlyVersion     bool `           long:"dumpversion"          description:"show only version number and exit"`
 	ShowHelp            bool `short:"h"  long:"help"                 description:"show this help message"`
+
+	// server settings
+	ServerBind string `long:"bind"         env:"SERVER_BIND"   description:"Server address" default:":8080"`
+
 }
 
 var argparser *flags.Parser
@@ -397,6 +403,10 @@ func main() {
 		LoggerError.Fatalf("Could not get current path: %v", err)
 	}
 
+	// daemon mode
+	LoggerInfo.Printf("starting http server on %s", opts.ServerBind)
+	startHttpServer()
+
 	// endless daemon-reload loop
 	for {
 		// change to initial directory for fetching crontabs
@@ -424,6 +434,18 @@ func main() {
 		runner.Stop()
 		LoggerInfo.Println("Reloading configuration")
 	}
+}
+
+// start and handle prometheus handler
+func startHttpServer() {
+	go func() {
+		if opts.ServerBind != "" {
+			http.Handle("/metrics", promhttp.Handler())
+			if err := http.ListenAndServe(opts.ServerBind, nil); err != nil {
+				panic(err)
+			}
+		}
+	}()
 }
 
 func registerRunnerShutdown(runner *Runner) {

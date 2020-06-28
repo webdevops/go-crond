@@ -1,6 +1,10 @@
 # Change Log
 
 ## [Unreleased]
+- Implemented new build system
+    - inject version info from git
+    - linting
+- Add prometheus support
 
 ## [0.6.0] - 2017-06-01
 - Switching of current working directory to / (root) when running cronjobs
