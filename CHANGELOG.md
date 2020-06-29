@@ -1,10 +1,11 @@
 # Change Log
 
-## [Unreleased]
+## [20.6.0] - 2020-06-29
+- Switch to [Calendar Versioning](https://calver.org/) with `YY.MM.MICRO format` (year, month, increment)
 - Implemented new build system
     - inject version info from git
     - linting
-- Add prometheus support
+- Add prometheus metric support
 - Switch logger to logrus
 - Replace `--no-auto` with `--auto` (system crontab needs to be enabled now)
 
