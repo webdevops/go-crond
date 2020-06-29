@@ -101,9 +101,9 @@ func initArgParser() []string {
 // Log error object as message
 func logFatalErrorAndExit(err error, exitCode int) {
 	if err != nil {
-		log.Errorf("ERROR: %s\n", err)
+		log.Errorln(err)
 	} else {
-		log.Errorf("ERROR: Unknown fatal error")
+		log.Errorf("Unknown fatal error")
 	}
 	os.Exit(exitCode)
 }
@@ -128,7 +128,7 @@ func findFilesInPaths(pathlist []string, callback func(os.FileInfo, string)) {
 				log.Fatal(err)
 			}
 		} else {
-			log.Infof("Path %s does not exists\n", path)
+			log.Infof("path %s does not exists\n", path)
 		}
 	}
 }
@@ -138,7 +138,7 @@ func findExecutabesInPathes(pathlist []string, callback func(os.FileInfo, string
 		if f.Mode().IsRegular() && (f.Mode().Perm()&0100 != 0) {
 			callback(f, path)
 		} else {
-			log.Infof("Ignoring non exectuable file %s\n", path)
+			log.Infof("ignoring non exectuable file %s\n", path)
 		}
 	})
 }
@@ -207,7 +207,7 @@ func parseCrontab(path string, username string) []CrontabEntry {
 	}
 
 	if err != nil {
-		log.Fatalf("Parser read err: %v", err)
+		log.Fatalf("parser read err: %v", err)
 	}
 
 	crontabEntries := parser.Parse()
@@ -254,7 +254,7 @@ func collectCrontabs(args []string) []CrontabEntry {
 
 				ret = append(ret, includeRunPartsDirectory(cronSpec, cronPath)...)
 			} else {
-				log.Infof("Ignoring --run-parts because of missing time spec: %s\n", runPart)
+				log.Infof("ignoring --run-parts because of missing time spec: %s\n", runPart)
 			}
 		}
 	}
@@ -395,17 +395,17 @@ func main() {
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, syscall.SIGHUP)
 
-	log.Infof("Starting %s version %s (%s; %s) ", Name, gitTag, gitCommit, runtime.Version())
+	log.Infof("starting %s version %s (%s; %s) ", Name, gitTag, gitCommit, runtime.Version())
 
 	// check if user switching is possible (have to be root)
 	opts.EnableUserSwitching = true
 	currentUser, err := user.Current()
 	if err != nil || currentUser.Uid != "0" {
 		if opts.AllowUnprivileged {
-			log.Errorf("WARNING: go-crond is NOT running as root, disabling user switching")
+			log.Warnln("go-crond is NOT running as root, disabling user switching")
 			opts.EnableUserSwitching = false
 		} else {
-			log.Errorf("ERROR: go-crond is NOT running as root, add option --allow-unprivileged if this is ok")
+			log.Errorln("go-crond is NOT running as root, add option --allow-unprivileged if this is ok")
 			os.Exit(1)
 		}
 	}
@@ -413,19 +413,22 @@ func main() {
 	// get current path
 	confDir, err := os.Getwd()
 	if err != nil {
-		log.Fatalf("Could not get current path: %v", err)
+		log.Fatalf("could not get current path: %v", err)
 	}
 
 	// daemon mode
+	initMetrics()
 	log.Infof("starting http server on %s", opts.ServerBind)
 	startHttpServer()
 
 	// endless daemon-reload loop
 	for {
+		resetMetrics()
+
 		// change to initial directory for fetching crontabs
 		err = os.Chdir(confDir)
 		if err != nil {
-			log.Fatalf("Cannot switch to path %s: %v", confDir, err)
+			log.Fatalf("cannot switch to path %s: %v", confDir, err)
 		}
 
 		// create new cron runner
@@ -435,7 +438,7 @@ func main() {
 		// chdir to root to prevent relative path errors
 		err = os.Chdir("/")
 		if err != nil {
-			log.Fatalf("Cannot switch to path %s: %v", confDir, err)
+			log.Fatalf("cannot switch to path %s: %v", confDir, err)
 		}
 
 		// start new cron runner
@@ -475,10 +478,10 @@ func registerRunnerShutdown(runner *Runner) {
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
 	go func() {
 		s := <-c
-		log.Infof("Got signal: %v", s)
+		log.Infof("got signal: %v", s)
 		runner.Stop()
 
-		log.Infof("Terminated")
+		log.Infof("terminated")
 		os.Exit(1)
 	}()
 }
