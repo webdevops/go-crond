@@ -53,11 +53,10 @@ Application Options:
   -V, --version             show version and exit
       --dumpversion         show only version number and exit
   -h, --help                show this help message
-  -v, --verbose             verbose mode
-      --log.json            Switch log output to json format
-      --server.bind=        Server address (eg. prometheus metrics) (default: :8080) [$SERVER_BIND]
+  -v, --verbose             verbose mode [$VERBOSE]
+      --log.json            Switch log output to json format [$LOG_JSON]
+      --server.bind=        Server address, eg. ':8080' (/healthz and /metrics for prometheus) [$SERVER_BIND]
       --server.metrics      Enable prometheus metrics (do not use senstive informations in commands -> use environment variables or files for storing these informations) [$SERVER_METRICS]
-
 ```
 
 Crontab files can be added as arguments or automatic included by using eg. `--include=crond-path/`
@@ -100,7 +99,7 @@ Run crond with run-parts with custom time spec and different user:
 ## Installation
 
 ```bash
-GOCROND_VERSION=20.6.0 \
+GOCROND_VERSION=20.7.0 \
 && wget -O /usr/local/bin/go-crond https://github.com/webdevops/go-crond/releases/download/$GOCROND_VERSION/go-crond-64-linux \
 && chmod +x /usr/local/bin/go-crond
 ```

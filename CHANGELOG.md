@@ -1,5 +1,12 @@
 # Change Log
 
+## [20.7.0] - 2020-07-01
+- Disable http server by default
+- Cleanup
+- Added env variable `LOG_JSON` and `VERBOSE`
+- Added various Docker image builds (alpine, debian, ubuntu)
+- Switch to `ENTRYPOINT` instead of `CMD` for Dockerfiles
+
 ## [20.6.0] - 2020-06-29
 - Switch to [Calendar Versioning](https://calver.org/) with `YY.MM.MICRO format` (year, month, increment)
 - Implemented new build system
