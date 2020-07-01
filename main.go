@@ -45,11 +45,11 @@ var opts struct {
 	ShowHelp            bool `short:"h"  long:"help"          description:"show this help message"`
 
 	// logger
-	Verbose bool `short:"v"  long:"verbose"       description:"verbose mode"`
-	LogJson bool `           long:"log.json"      description:"Switch log output to json format"`
+	Verbose bool `short:"v"  long:"verbose"      env:"VERBOSE"  description:"verbose mode"`
+	LogJson bool `           long:"log.json"     env:"LOG_JSON" description:"Switch log output to json format"`
 
 	// server settings
-	ServerBind    string `long:"server.bind"     env:"SERVER_BIND"     description:"Server address (eg. prometheus metrics)" default:":8080"`
+	ServerBind    string `long:"server.bind"     env:"SERVER_BIND"     description:"Server address, eg. ':8080' (/healthz and /metrics for prometheus)" default:""`
 	ServerMetrics bool   `long:"server.metrics"  env:"SERVER_METRICS"  description:"Enable prometheus metrics (do not use senstive informations in commands -> use environment variables or files for storing these informations)"`
 }
 

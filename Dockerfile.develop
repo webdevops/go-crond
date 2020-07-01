@@ -67,4 +67,7 @@ COPY . /go/src/github.com/webdevops/go-crond
 RUN make build-local \
     && cp -a go-crond /usr/local/bin
 
+ENV SERVER_BIND=":8080" \
+    SERVER_METRICS="1"
+
 CMD ["./go-crond"]

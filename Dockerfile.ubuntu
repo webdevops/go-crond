@@ -1,0 +1,24 @@
+FROM golang:1.14 as build
+
+WORKDIR /go/src/github.com/webdevops/go-crond
+
+# Get deps (cached)
+COPY ./go.mod /go/src/github.com/webdevops/go-crond
+COPY ./go.sum /go/src/github.com/webdevops/go-crond
+RUN go mod download
+
+# Compile
+COPY ./ /go/src/github.com/webdevops/go-crond
+RUN make lint
+RUN make build-local
+
+#############################################
+# FINAL IMAGE
+#############################################
+FROM ubuntu:latest
+ENV SERVER_BIND=":8080" \
+    SERVER_METRICS="1" \
+    LOG_JSON="1"
+COPY --from=build /go/src/github.com/webdevops/go-crond/go-crond /usr/local/bin
+EXPOSE 8080
+ENTRYPOINT ["go-crond"]

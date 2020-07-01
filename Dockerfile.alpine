@@ -16,5 +16,9 @@ RUN make build-local
 # FINAL IMAGE
 #############################################
 FROM alpine
+ENV SERVER_BIND=":8080" \
+    SERVER_METRICS="1" \
+    LOG_JSON="1"
 COPY --from=build /go/src/github.com/webdevops/go-crond/go-crond /usr/local/bin
-CMD ["go-crond"]
+EXPOSE 8080
+ENTRYPOINT ["go-crond"]
