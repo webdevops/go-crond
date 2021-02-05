@@ -2,9 +2,6 @@ package main
 
 import (
 	"fmt"
-	flags "github.com/jessevdk/go-flags"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
-	log "github.com/sirupsen/logrus"
 	"net/http"
 	"os"
 	"os/signal"
@@ -13,6 +10,10 @@ import (
 	"runtime"
 	"strings"
 	"syscall"
+
+	flags "github.com/jessevdk/go-flags"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
+	log "github.com/sirupsen/logrus"
 )
 
 const (
@@ -39,6 +40,7 @@ var opts struct {
 	RunPartsWeekly      []string `long:"run-parts-weekly"     description:"Execute files in directory every beginning week (like run-parts)"`
 	RunPartsMonthly     []string `long:"run-parts-monthly"    description:"Execute files in directory every beginning month (like run-parts)"`
 	AllowUnprivileged   bool     `long:"allow-unprivileged"   description:"Allow daemon to run as non root (unprivileged) user"`
+	WorkDir             string   `long:"working-directory"    description:"Set the working directory for crontab commands" default:"/"`
 	EnableUserSwitching bool
 	ShowVersion         bool `short:"V"  long:"version"       description:"show version and exit"`
 	ShowOnlyVersion     bool `long:"dumpversion"              description:"show only version number and exit"`
@@ -436,7 +438,7 @@ func main() {
 		registerRunnerShutdown(runner)
 
 		// chdir to root to prevent relative path errors
-		err = os.Chdir("/")
+		err = os.Chdir(opts.WorkDir)
 		if err != nil {
 			log.Fatalf("cannot switch to path %s: %v", confDir, err)
 		}
