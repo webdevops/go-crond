@@ -45,7 +45,7 @@ ALL = \
 
 
 docker:
-	docker build . -t webdevops/go-crond
+	docker build . -t webdevops/go-crond -f Dockerfile.alpine
 
 docker-dev:
 	docker build -f Dockerfile.develop . -t webdevops/go-crond:develop
