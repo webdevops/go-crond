@@ -1,24 +1,21 @@
-FROM golang:1.14 as build
-
+FROM golang:1.16.2 as build
 WORKDIR /go/src/github.com/webdevops/go-crond
-
-# Get deps (cached)
 COPY ./go.mod /go/src/github.com/webdevops/go-crond
 COPY ./go.sum /go/src/github.com/webdevops/go-crond
-RUN go mod download
-
-# Compile
 COPY ./ /go/src/github.com/webdevops/go-crond
-RUN make lint
-RUN make build-local
+RUN go mod download && \
+    make lint && \
+    make build-local
 
-#############################################
-# FINAL IMAGE
-#############################################
-FROM alpine
-ENV SERVER_BIND=":8080" \
-    SERVER_METRICS="1" \
-    LOG_JSON="1"
+FROM alpine:3.13.2
+ENV LOG_JSON="1"
 COPY --from=build /go/src/github.com/webdevops/go-crond/go-crond /usr/local/bin
-EXPOSE 8080
+RUN adduser \
+    -D \
+    -S \
+    -h /home/go-crond \
+    -s /bin/false \
+    -u 9999 \
+    go-crond
+USER go-crond
 ENTRYPOINT ["go-crond"]

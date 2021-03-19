@@ -125,3 +125,23 @@ go-crond exposes [Prometheus][] metrics on `:8080/metrics` if enabled.
 | `gocrond_task_run_duration` | Duration of last exec                           |
 
 [Prometheus]: https://prometheus.io/
+
+### examples
+
+#### every second
+
+```bash
+docker run -v $PWD/examples:/tmp/examples \
+           -it webdevops/go-crond:20.7.0-alpine \
+           --allow-unprivileged \
+           --run-parts=1s=guest:/tmp/examples/cron.daily
+```
+
+#### daily
+
+```bash
+docker run -v $PWD/examples:/tmp/examples \
+           -it webdevops/go-crond:20.7.0-alpine \
+           --allow-unprivileged \
+           --run-parts-daily=guest:/tmp/examples/cron.daily
+```
