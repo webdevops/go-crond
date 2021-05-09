@@ -418,8 +418,10 @@ func main() {
 
 	// daemon mode
 	initMetrics()
-	log.Infof("starting http server on %s", opts.ServerBind)
-	startHttpServer()
+	if opts.ServerBind != "" {
+		log.Infof("starting http server on %s", opts.ServerBind)
+		startHttpServer()
+	}
 
 	// endless daemon-reload loop
 	for {
