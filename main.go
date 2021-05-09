@@ -374,6 +374,7 @@ func main() {
 	signal.Notify(c, syscall.SIGHUP)
 
 	log.Infof("starting %s version %s (%s; %s) ", Name, gitTag, gitCommit, runtime.Version())
+	log.Info(string(opts.GetJson()))
 
 	// check if user switching is possible (have to be root)
 	opts.Cron.EnableUserSwitching = true

@@ -1,5 +1,10 @@
 package config
 
+import (
+	"encoding/json"
+	log "github.com/sirupsen/logrus"
+)
+
 type (
 	Opts struct {
 		ShowVersion     bool `short:"V"  long:"version"       description:"show version and exit"`
@@ -35,3 +40,11 @@ type (
 		}
 	}
 )
+
+func (o *Opts) GetJson() []byte {
+	jsonBytes, err := json.Marshal(o)
+	if err != nil {
+		log.Panic(err)
+	}
+	return jsonBytes
+}
