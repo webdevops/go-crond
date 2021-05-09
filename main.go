@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/webdevops/go-crond/config"
 	"net/http"
 	"os"
 	"os/signal"
@@ -23,37 +24,12 @@ const (
 )
 
 var (
+	opts config.Opts
+
 	// Git version information
 	gitCommit = "<unknown>"
 	gitTag    = "<unknown>"
 )
-
-var opts struct {
-	DefaultUser         string   `long:"default-user"         description:"Default user"                  default:"root"`
-	IncludeCronD        []string `long:"include"              description:"Include files in directory as system crontabs (with user)"`
-	Auto                bool     `long:"auto"                 description:"Enable automatic system crontab detection"`
-	RunParts            []string `long:"run-parts"            description:"Execute files in directory with custom spec (like run-parts; spec-units:ns,us,s,m,h; format:time-spec:path; eg:10s,1m,1h30m)"`
-	RunParts1m          []string `long:"run-parts-1min"       description:"Execute files in directory every beginning minute (like run-parts)"`
-	RunParts15m         []string `long:"run-parts-15min"      description:"Execute files in directory every beginning 15 minutes (like run-parts)"`
-	RunPartsHourly      []string `long:"run-parts-hourly"     description:"Execute files in directory every beginning hour (like run-parts)"`
-	RunPartsDaily       []string `long:"run-parts-daily"      description:"Execute files in directory every beginning day (like run-parts)"`
-	RunPartsWeekly      []string `long:"run-parts-weekly"     description:"Execute files in directory every beginning week (like run-parts)"`
-	RunPartsMonthly     []string `long:"run-parts-monthly"    description:"Execute files in directory every beginning month (like run-parts)"`
-	AllowUnprivileged   bool     `long:"allow-unprivileged"   description:"Allow daemon to run as non root (unprivileged) user"`
-	WorkDir             string   `long:"working-directory"    description:"Set the working directory for crontab commands" default:"/"`
-	EnableUserSwitching bool
-	ShowVersion         bool `short:"V"  long:"version"       description:"show version and exit"`
-	ShowOnlyVersion     bool `long:"dumpversion"              description:"show only version number and exit"`
-	ShowHelp            bool `short:"h"  long:"help"          description:"show this help message"`
-
-	// logger
-	Verbose bool `short:"v"  long:"verbose"      env:"VERBOSE"  description:"verbose mode"`
-	LogJson bool `           long:"log.json"     env:"LOG_JSON" description:"Switch log output to json format"`
-
-	// server settings
-	ServerBind    string `long:"server.bind"     env:"SERVER_BIND"     description:"Server address, eg. ':8080' (/healthz and /metrics for prometheus)" default:""`
-	ServerMetrics bool   `long:"server.metrics"  env:"SERVER_METRICS"  description:"Enable prometheus metrics (do not use senstive informations in commands -> use environment variables or files for storing these informations)"`
-}
 
 var argparser *flags.Parser
 var args []string
@@ -88,12 +64,12 @@ func initArgParser() []string {
 	}
 
 	// verbose level
-	if opts.Verbose {
+	if opts.Log.Verbose {
 		log.SetLevel(log.DebugLevel)
 	}
 
 	// verbose level
-	if opts.LogJson {
+	if opts.Log.Json {
 		log.SetFormatter(&log.JSONFormatter{})
 	}
 
@@ -178,7 +154,7 @@ func includeRunPartsDirectories(spec string, paths []string) []CrontabEntry {
 func includeRunPartsDirectory(spec string, path string) []CrontabEntry {
 	var ret []CrontabEntry
 
-	user := opts.DefaultUser
+	user := opts.Cron.DefaultUser
 
 	// extract user from path
 	if strings.Contains(path, ":") {
@@ -221,7 +197,7 @@ func collectCrontabs(args []string) []CrontabEntry {
 	var ret []CrontabEntry
 
 	// include system default crontab
-	if opts.Auto {
+	if opts.Cron.Auto {
 		ret = append(ret, includeSystemDefaults()...)
 	}
 
@@ -242,13 +218,13 @@ func collectCrontabs(args []string) []CrontabEntry {
 	}
 
 	// --include-crond
-	if len(opts.IncludeCronD) >= 1 {
-		ret = append(ret, includePathsForCrontabs(opts.IncludeCronD, CRONTAB_TYPE_SYSTEM)...)
+	if len(opts.Cron.IncludeCronD) >= 1 {
+		ret = append(ret, includePathsForCrontabs(opts.Cron.IncludeCronD, CRONTAB_TYPE_SYSTEM)...)
 	}
 
 	// --run-parts
-	if len(opts.RunParts) >= 1 {
-		for _, runPart := range opts.RunParts {
+	if len(opts.Cron.RunParts) >= 1 {
+		for _, runPart := range opts.Cron.RunParts {
 			if strings.Contains(runPart, ":") {
 				split := strings.SplitN(runPart, ":", 2)
 				cronSpec, cronPath := split[0], split[1]
@@ -262,33 +238,33 @@ func collectCrontabs(args []string) []CrontabEntry {
 	}
 
 	// --run-parts-1min
-	if len(opts.RunParts1m) >= 1 {
-		ret = append(ret, includeRunPartsDirectories("@every 1m", opts.RunParts1m)...)
+	if len(opts.Cron.RunParts1m) >= 1 {
+		ret = append(ret, includeRunPartsDirectories("@every 1m", opts.Cron.RunParts1m)...)
 	}
 
 	// --run-parts-15min
-	if len(opts.RunParts15m) >= 1 {
-		ret = append(ret, includeRunPartsDirectories("*/15 * * * *", opts.RunParts15m)...)
+	if len(opts.Cron.RunParts15m) >= 1 {
+		ret = append(ret, includeRunPartsDirectories("*/15 * * * *", opts.Cron.RunParts15m)...)
 	}
 
 	// --run-parts-hourly
-	if len(opts.RunPartsHourly) >= 1 {
-		ret = append(ret, includeRunPartsDirectories("@hourly", opts.RunPartsHourly)...)
+	if len(opts.Cron.RunPartsHourly) >= 1 {
+		ret = append(ret, includeRunPartsDirectories("@hourly", opts.Cron.RunPartsHourly)...)
 	}
 
 	// --run-parts-daily
-	if len(opts.RunPartsDaily) >= 1 {
-		ret = append(ret, includeRunPartsDirectories("@daily", opts.RunPartsDaily)...)
+	if len(opts.Cron.RunPartsDaily) >= 1 {
+		ret = append(ret, includeRunPartsDirectories("@daily", opts.Cron.RunPartsDaily)...)
 	}
 
 	// --run-parts-weekly
-	if len(opts.RunPartsWeekly) >= 1 {
-		ret = append(ret, includeRunPartsDirectories("@weekly", opts.RunPartsWeekly)...)
+	if len(opts.Cron.RunPartsWeekly) >= 1 {
+		ret = append(ret, includeRunPartsDirectories("@weekly", opts.Cron.RunPartsWeekly)...)
 	}
 
 	// --run-parts-monthly
-	if len(opts.RunPartsMonthly) >= 1 {
-		ret = append(ret, includeRunPartsDirectories("@monthly", opts.RunPartsMonthly)...)
+	if len(opts.Cron.RunPartsMonthly) >= 1 {
+		ret = append(ret, includeRunPartsDirectories("@monthly", opts.Cron.RunPartsMonthly)...)
 	}
 
 	return ret
@@ -306,7 +282,7 @@ func includeSystemDefaults() []CrontabEntry {
 		log.Infof(" --> detected Alpine family, using distribution defaults")
 
 		if checkIfDirectoryExists("/etc/crontabs") {
-			ret = append(ret, includePathForCrontabs("/etc/crontabs", opts.DefaultUser)...)
+			ret = append(ret, includePathForCrontabs("/etc/crontabs", opts.Cron.DefaultUser)...)
 		}
 
 		systemDetected = true
@@ -377,7 +353,7 @@ func createCronRunner(args []string) *Runner {
 	runner := NewRunner()
 
 	for _, crontabEntry := range crontabEntries {
-		if opts.EnableUserSwitching {
+		if opts.Cron.EnableUserSwitching {
 			if err := runner.AddWithUser(crontabEntry); err != nil {
 				log.Fatal(err)
 			}
@@ -400,12 +376,12 @@ func main() {
 	log.Infof("starting %s version %s (%s; %s) ", Name, gitTag, gitCommit, runtime.Version())
 
 	// check if user switching is possible (have to be root)
-	opts.EnableUserSwitching = true
+	opts.Cron.EnableUserSwitching = true
 	currentUser, err := user.Current()
 	if err != nil || currentUser.Uid != "0" {
-		if opts.AllowUnprivileged {
+		if opts.Cron.AllowUnprivileged {
 			log.Warnln("go-crond is NOT running as root, disabling user switching")
-			opts.EnableUserSwitching = false
+			opts.Cron.EnableUserSwitching = false
 		} else {
 			log.Errorln("go-crond is NOT running as root, add option --allow-unprivileged if this is ok")
 			os.Exit(1)
@@ -420,8 +396,8 @@ func main() {
 
 	// daemon mode
 	initMetrics()
-	if opts.ServerBind != "" {
-		log.Infof("starting http server on %s", opts.ServerBind)
+	if opts.Server.Bind != "" {
+		log.Infof("starting http server on %s", opts.Server.Bind)
 		startHttpServer()
 	}
 
@@ -440,7 +416,7 @@ func main() {
 		registerRunnerShutdown(runner)
 
 		// chdir to root to prevent relative path errors
-		err = os.Chdir(opts.WorkDir)
+		err = os.Chdir(opts.Cron.WorkDir)
 		if err != nil {
 			log.Fatalf("cannot switch to path %s: %v", confDir, err)
 		}
@@ -459,7 +435,7 @@ func main() {
 // start and handle prometheus handler
 func startHttpServer() {
 	go func() {
-		if opts.ServerBind != "" {
+		if opts.Server.Bind != "" {
 			// healthz
 			http.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
 				if _, err := fmt.Fprint(w, "Ok"); err != nil {
@@ -467,10 +443,10 @@ func startHttpServer() {
 				}
 			})
 
-			if opts.ServerMetrics {
+			if opts.Server.Metrics {
 				http.Handle("/metrics", promhttp.Handler())
 			}
-			if err := http.ListenAndServe(opts.ServerBind, nil); err != nil {
+			if err := http.ListenAndServe(opts.Server.Bind, nil); err != nil {
 				panic(err)
 			}
 		}
