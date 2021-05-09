@@ -1,4 +1,4 @@
-FROM golang:stretch
+FROM golang:1.16-buster
 
 # Install tools
 RUN apt-get update \
@@ -13,7 +13,7 @@ RUN apt-get update \
         git \
         file \
     && apt-get install -y -f \
-        gcc-6-arm-linux-gnueabi \
+        gcc-8-arm-linux-gnueabi \
         gcc-arm-none-eabi \
         gcc-arm-linux-gnueabi \
         binutils-arm-linux-gnueabi \
