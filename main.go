@@ -74,8 +74,8 @@ func initArgParser() []string {
 
 	// --version
 	if opts.ShowVersion {
-		fmt.Println(fmt.Sprintf("%s version %s (%s)", Name, gitTag, gitCommit))
-		fmt.Println(fmt.Sprintf("Copyright (C) 2020 %s", Author))
+		fmt.Printf("%s version %s (%s)\n", Name, gitTag, gitCommit)
+		fmt.Printf("Copyright (C) 2021 %s\n", Author)
 		os.Exit(0)
 	}
 
