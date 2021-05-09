@@ -72,7 +72,7 @@ Run crond with a system crontab:
 Run crond with user crontabs (without user in it) under specific users:
 
     go-crond \
-        root:examples/crontab-root \ 
+        root:examples/crontab-root \
         guest:examples/crontab-guest
 
 
@@ -121,7 +121,7 @@ go-crond exposes [Prometheus][] metrics on `:8080/metrics` if enabled.
 |:----------------------------|:------------------------------------------------|
 | `gocrond_task_info`         | List of all cronjobs                            |
 | `gocrond_task_run_count`    | Counter for each executed task                  |
-| `gocrond_task_run_success`  | Last status (0=failed, 1=success) for each task |
+| `gocrond_task_run_result`   | Last status (0=failed, 1=success) for each task |
 | `gocrond_task_run_time`     | Last exec time (unix timestamp) for each task   |
 | `gocrond_task_run_duration` | Duration of last exec                           |
 
