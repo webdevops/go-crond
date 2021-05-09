@@ -91,7 +91,7 @@ func (p *Parser) parseLines() []CrontabEntry {
 		}
 
 		// environment line
-		if envLineRegex.MatchString(line) == true {
+		if envLineRegex.MatchString(line) {
 			m := envLineRegex.FindStringSubmatch(line)
 			envName := strings.TrimSpace(m[1])
 			envValue := strings.TrimSpace(m[2])
@@ -106,7 +106,7 @@ func (p *Parser) parseLines() []CrontabEntry {
 		}
 
 		// cronjob line
-		if p.cronLineRegex.MatchString(line) == true {
+		if p.cronLineRegex.MatchString(line) {
 			m := p.cronLineRegex.FindStringSubmatch(line)
 
 			if p.cronjobUsername == CRONTAB_TYPE_SYSTEM {
