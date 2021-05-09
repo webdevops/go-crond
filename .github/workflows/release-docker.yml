@@ -56,9 +56,9 @@ jobs:
         uses: crazy-max/ghaction-docker-meta@v2
         with:
           images: webdevops/go-crond,quay.io/webdevops/go-crond
-          flavor:
+          flavor: |
             latest=false
-            suffix=alpine
+            suffix=-alpine
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1
@@ -98,9 +98,9 @@ jobs:
         uses: crazy-max/ghaction-docker-meta@v2
         with:
           images: webdevops/go-crond,quay.io/webdevops/go-crond
-          flavor:
+          flavor: |
             latest=false
-            suffix=debian
+            suffix=-debian
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1
