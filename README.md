@@ -2,7 +2,8 @@
 
 [![GitHub release](https://img.shields.io/github/release/webdevops/go-crond.svg)](https://github.com/webdevops/go-crond/releases)
 [![license](https://img.shields.io/github/license/webdevops/go-crond.svg)](https://github.com/webdevops/go-crond/blob/master/LICENSE)
-[![Build Status](https://travis-ci.org/webdevops/go-crond.svg?branch=master)](https://travis-ci.org/webdevops/go-crond)
+[![DockerHub](https://img.shields.io/badge/DockerHub-webdevops%2Fgo--crond-blue)](https://hub.docker.com/r/webdevops/go-crond/)
+[![Quay.io](https://img.shields.io/badge/Quay.io-webdevops%2Fgo--crond-blue)](https://quay.io/repository/webdevops/go-crond)
 [![Github All Releases](https://img.shields.io/github/downloads/webdevops/go-crond/total.svg)]()
 [![Github Releases](https://img.shields.io/github/downloads/webdevops/go-crond/latest/total.svg)]()
 
