@@ -60,7 +60,7 @@ func initArgParser() []string {
 	// --help
 	if opts.ShowHelp {
 		argparser.WriteHelp(os.Stdout)
-		os.Exit(1)
+		os.Exit(0)
 	}
 
 	// verbose level

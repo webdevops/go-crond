@@ -54,7 +54,6 @@ jobs:
         with:
           images: webdevops/go-crond,quay.io/webdevops/go-crond
           flavor: |
-            latest=false
             suffix=-alpine
 
       - name: Set up QEMU
@@ -96,7 +95,6 @@ jobs:
         with:
           images: webdevops/go-crond,quay.io/webdevops/go-crond
           flavor: |
-            latest=false
             suffix=-debian
 
       - name: Set up QEMU
