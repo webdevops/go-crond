@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"github.com/webdevops/go-crond/config"
 	"net/http"
 	"os"
 	"os/signal"
@@ -11,6 +10,8 @@ import (
 	"runtime"
 	"strings"
 	"syscall"
+
+	"github.com/webdevops/go-crond/config"
 
 	flags "github.com/jessevdk/go-flags"
 	"github.com/prometheus/client_golang/prometheus/promhttp"

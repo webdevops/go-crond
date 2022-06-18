@@ -2,11 +2,12 @@ package main
 
 import (
 	"fmt"
-	log "github.com/sirupsen/logrus"
 	"os"
 	"path/filepath"
 	"strconv"
 	"syscall"
+
+	log "github.com/sirupsen/logrus"
 )
 
 func fileGetAbsolutePath(path string) (string, os.FileInfo) {
