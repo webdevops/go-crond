@@ -35,7 +35,7 @@ func (r *Runner) Add(cronjob CrontabEntry) error {
 
 	err := r.cron.AddFunc(cronSpec, r.cmdFunc(cronjob, func(execCmd *exec.Cmd) bool {
 		// before exec callback
-		log.WithFields(LogCronjobToFields(cronjob)).Debugf("executing")
+		log.WithFields(LogCronjobToFields(cronjob)).Infof("executing")
 		return true
 	}))
 
@@ -148,16 +148,24 @@ func (r *Runner) cmdFunc(cronjob CrontabEntry, cmdCallback func(*exec.Cmd) bool)
 			prometheusMetricTaskRunTime.With(r.cronjobToPrometheusLabels(cronjob)).SetToCurrentTime()
 
 			logFields := LogCronjobToFields(cronjob)
+			logFields["elapsed_s"] = elapsed.Seconds()
+			if execCmd.ProcessState != nil {
+				logFields["exitCode"] = execCmd.ProcessState.ExitCode()
+			}
+
 			if err != nil {
 				prometheusMetricTaskRunCount.With(r.cronjobToPrometheusLabels(cronjob, prometheus.Labels{"result": "error"})).Inc()
 				prometheusMetricTaskRunResult.With(r.cronjobToPrometheusLabels(cronjob)).Set(0)
 				logFields["result"] = "error"
-				log.WithFields(logFields).Errorln(string(cmdStdout))
 			} else {
 				prometheusMetricTaskRunCount.With(r.cronjobToPrometheusLabels(cronjob, prometheus.Labels{"result": "success"})).Inc()
 				prometheusMetricTaskRunResult.With(r.cronjobToPrometheusLabels(cronjob)).Set(1)
 				logFields["result"] = "success"
-				log.WithFields(logFields).Debugln(string(cmdStdout))
+			}
+
+			log.WithFields(logFields).Info("finished")
+			if len(cmdStdout) > 0 {
+				log.Debugln(string(cmdStdout))
 			}
 		}
 	}
