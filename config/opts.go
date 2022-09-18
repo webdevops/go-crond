@@ -42,6 +42,10 @@ type (
 			WriteTimeout time.Duration `long:"server.timeout.write"     env:"SERVER_TIMEOUT_WRITE"  description:"Server write timeout"  default:"10s"`
 			Metrics      bool          `long:"server.metrics"           env:"SERVER_METRICS"  description:"Enable prometheus metrics (do not use senstive informations in commands -> use environment variables or files for storing these informations)"`
 		}
+
+		Args struct {
+			Crontabs []string `description:"path to crontab files"`
+		} `positional-args:"yes" `
 	}
 )
 

@@ -37,27 +37,38 @@ on [Docker hub](https://hub.docker.com/repository/docker/webdevops/go-crond/tags
 
 ```
 Usage:
-  go-crond [user:crontab] [user:crontab]…
+  go-crond [OPTIONS] [Crontabs...]
 
 Application Options:
-      --default-user=       Default user (default: root)
-      --include=            Include files in directory as system crontabs (with user)
-      --auto                Enable automatic system crontab detection
-      --run-parts=          Execute files in directory with custom spec (like run-parts; spec-units:ns,us,s,m,h; format:time-spec:path; eg:10s,1m,1h30m)
-      --run-parts-1min=     Execute files in directory every beginning minute (like run-parts)
-      --run-parts-15min=    Execute files in directory every beginning 15 minutes (like run-parts)
-      --run-parts-hourly=   Execute files in directory every beginning hour (like run-parts)
-      --run-parts-daily=    Execute files in directory every beginning day (like run-parts)
-      --run-parts-weekly=   Execute files in directory every beginning week (like run-parts)
-      --run-parts-monthly=  Execute files in directory every beginning month (like run-parts)
-      --allow-unprivileged  Allow daemon to run as non root (unprivileged) user
-  -V, --version             show version and exit
-      --dumpversion         show only version number and exit
-  -h, --help                show this help message
-  -v, --verbose             verbose mode [$VERBOSE]
-      --log.json            Switch log output to json format [$LOG_JSON]
-      --server.bind=        Server address, eg. ':8080' (/healthz and /metrics for prometheus) [$SERVER_BIND]
-      --server.metrics      Enable prometheus metrics (do not use senstive informations in commands -> use environment variables or files for storing these informations) [$SERVER_METRICS]
+  -V, --version               show version and exit
+      --dumpversion           show only version number and exit
+  -h, --help                  show this help message
+      --default-user=         Default user (default: root)
+      --include=              Include files in directory as system crontabs (with user)
+      --auto                  Enable automatic system crontab detection
+      --run-parts=            Execute files in directory with custom spec (like run-parts; spec-units:ns,us,s,m,h;
+                              format:time-spec:path; eg:10s,1m,1h30m)
+      --run-parts-1min=       Execute files in directory every beginning minute (like run-parts)
+      --run-parts-15min=      Execute files in directory every beginning 15 minutes (like run-parts)
+      --run-parts-hourly=     Execute files in directory every beginning hour (like run-parts)
+      --run-parts-daily=      Execute files in directory every beginning day (like run-parts)
+      --run-parts-weekly=     Execute files in directory every beginning week (like run-parts)
+      --run-parts-monthly=    Execute files in directory every beginning month (like run-parts)
+      --allow-unprivileged    Allow daemon to run as non root (unprivileged) user
+      --working-directory=    Set the working directory for crontab commands (default: /)
+  -v, --verbose               verbose mode [$VERBOSE]
+      --log.json              Switch log output to json format [$LOG_JSON]
+      --server.bind=          Server address, eg. ':8080' (/healthz and /metrics for prometheus) [$SERVER_BIND]
+      --server.timeout.read=  Server read timeout (default: 5s) [$SERVER_TIMEOUT_READ]
+      --server.timeout.write= Server write timeout (default: 10s) [$SERVER_TIMEOUT_WRITE]
+      --server.metrics        Enable prometheus metrics (do not use senstive informations in commands -> use environment
+                              variables or files for storing these informations) [$SERVER_METRICS]
+
+Help Options:
+  -h, --help                  Show this help message
+
+Arguments:
+  Crontabs:                   path to crontab files
 ```
 
 Crontab files can be added as arguments or automatic included by using eg. `--include=crond-path/`

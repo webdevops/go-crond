@@ -26,17 +26,15 @@ const (
 )
 
 var (
-	opts config.Opts
+	opts      config.Opts
+	argparser *flags.Parser
 
 	// Git version information
 	gitCommit = "<unknown>"
 	gitTag    = "<unknown>"
 )
 
-var argparser *flags.Parser
-var args []string
-
-func initArgParser() []string {
+func initArgParser() {
 	argparser = flags.NewParser(&opts, flags.Default)
 	_, err := argparser.Parse()
 
@@ -80,8 +78,6 @@ func initArgParser() []string {
 	if opts.Log.Json {
 		log.SetFormatter(&log.JSONFormatter{})
 	}
-
-	return args
 }
 
 func findFilesInPaths(pathlist []string, callback func(os.FileInfo, string)) {
@@ -366,7 +362,7 @@ func createCronRunner(args []string) *Runner {
 }
 
 func main() {
-	args := initArgParser()
+	initArgParser()
 
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, syscall.SIGHUP)
@@ -411,7 +407,7 @@ func main() {
 		}
 
 		// create new cron runner
-		runner := createCronRunner(args)
+		runner := createCronRunner(opts.Args.Crontabs)
 		registerRunnerShutdown(runner)
 
 		// chdir to root to prevent relative path errors
