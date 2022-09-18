@@ -65,7 +65,7 @@ $(GOLANGCI_LINT_BIN):
 #######################################
 
 RELEASE_ASSETS = \
-	$(foreach GOARCH,amd64 arm64,\
+	$(foreach GOARCH,amd64 arm64 arm,\
 	$(foreach GOOS,linux darwin windows,\
 		release-assets/$(GOOS).$(GOARCH))) \
 
