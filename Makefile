@@ -66,7 +66,7 @@ $(GOLANGCI_LINT_BIN):
 
 RELEASE_ASSETS = \
 	$(foreach GOARCH,amd64 arm64 arm,\
-	$(foreach GOOS,linux darwin windows,\
+	$(foreach GOOS,linux darwin,\
 		release-assets/$(GOOS).$(GOARCH))) \
 
 word-dot = $(word $2,$(subst ., ,$1))
