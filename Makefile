@@ -92,3 +92,16 @@ release-assets/%: $(SOURCE)
  	GOARCH=$(call word-dot,$*,2) \
 	CGO_ENABLED=0 \
 	time go build -ldflags '$(LDFLAGS)' -o './release-assets/$(PROJECT_NAME).$(call word-dot,$*,1).$(call word-dot,$*,2)' .
+
+#######################################
+# development
+#######################################
+
+docker-dev:
+	docker build -f Dockerfile.develop . -t webdevops/go-crond:develop
+
+docker-run: docker-dev
+	docker run -ti --rm -w "$$(pwd)" -v "$$(pwd):$$(pwd):ro" -p 8080:8080 -e SERVER_METRICS=1 --name=cron webdevops/go-crond:develop bash
+
+build-env: docker-dev
+	docker run -ti --rm -w "$$(pwd)" -v "$$(pwd):$$(pwd)" -p 8080:8080 -e SERVER_METRICS=1 --name=cron webdevops/go-crond:develop bash

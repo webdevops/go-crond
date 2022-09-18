@@ -5,9 +5,6 @@ RUN apt-get update \
     && apt-get -y -f dist-upgrade \
     && apt-get install -y -f \
         build-essential \
-        linux-libc-dev \
-        gcc-multilib \
-        g++-multilib \
         vim \
         nano \
         git \
@@ -64,7 +61,7 @@ RUN go mod download
 COPY . /go/src/github.com/webdevops/go-crond
 
 # Build and install
-RUN make build-local \
+RUN make build \
     && cp -a go-crond /usr/local/bin
 
 ENV SERVER_BIND=":8080" \
