@@ -93,6 +93,9 @@ release-assets/%: $(SOURCE)
 	CGO_ENABLED=0 \
 	time go build -ldflags '$(LDFLAGS)' -o './release-assets/$(PROJECT_NAME).$(call word-dot,$*,1).$(call word-dot,$*,2)' .
 
+release-assets/darwin.arm:
+	echo "not supported"
+
 #######################################
 # development
 #######################################
