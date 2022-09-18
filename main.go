@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"os"
@@ -36,13 +37,19 @@ var argparser *flags.Parser
 var args []string
 
 func initArgParser() []string {
-	var err error
-	argparser = flags.NewParser(&opts, flags.PassDoubleDash)
-	args, err = argparser.Parse()
+	argparser = flags.NewParser(&opts, flags.Default)
+	_, err := argparser.Parse()
 
 	// check if there is an parse error
 	if err != nil {
-		logFatalErrorAndExit(err, 1)
+		var flagsErr *flags.Error
+		if ok := errors.As(err, &flagsErr); ok && flagsErr.Type == flags.ErrHelp {
+			os.Exit(0)
+		} else {
+			fmt.Println()
+			argparser.WriteHelp(os.Stdout)
+			os.Exit(1)
+		}
 	}
 
 	// --dumpversion
@@ -54,7 +61,7 @@ func initArgParser() []string {
 	// --version
 	if opts.ShowVersion {
 		fmt.Printf("%s version %s (%s)\n", Name, gitTag, gitCommit)
-		fmt.Printf("Copyright (C) 2021 %s\n", Author)
+		fmt.Printf("Copyright (C) 2022 %s\n", Author)
 		os.Exit(0)
 	}
 
@@ -75,16 +82,6 @@ func initArgParser() []string {
 	}
 
 	return args
-}
-
-// Log error object as message
-func logFatalErrorAndExit(err error, exitCode int) {
-	if err != nil {
-		log.Errorln(err)
-	} else {
-		log.Errorf("Unknown fatal error")
-	}
-	os.Exit(exitCode)
 }
 
 func findFilesInPaths(pathlist []string, callback func(os.FileInfo, string)) {
@@ -438,19 +435,33 @@ func main() {
 func startHttpServer() {
 	go func() {
 		if opts.Server.Bind != "" {
+			mux := http.NewServeMux()
+
 			// healthz
-			http.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
+			mux.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
 				if _, err := fmt.Fprint(w, "Ok"); err != nil {
-					log.Errorf(err.Error())
+					log.Error(err)
+				}
+			})
+
+			// readyz
+			mux.HandleFunc("/readyz", func(w http.ResponseWriter, r *http.Request) {
+				if _, err := fmt.Fprint(w, "Ok"); err != nil {
+					log.Error(err)
 				}
 			})
 
 			if opts.Server.Metrics {
-				http.Handle("/metrics", promhttp.Handler())
+				mux.Handle("/metrics", promhttp.Handler())
 			}
-			if err := http.ListenAndServe(opts.Server.Bind, nil); err != nil {
-				panic(err)
+
+			srv := &http.Server{
+				Addr:         opts.Server.Bind,
+				Handler:      mux,
+				ReadTimeout:  opts.Server.ReadTimeout,
+				WriteTimeout: opts.Server.WriteTimeout,
 			}
+			log.Fatal(srv.ListenAndServe())
 		}
 	}()
 }

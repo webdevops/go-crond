@@ -8,16 +8,16 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: Run Gosec Security Scanner
-        uses: securego/gosec@master
+      - name: Set Swap Space
+        uses: pierotofy/set-swap-space@master
         with:
-          args: ./...
+          swap-size-gb: 12
 
       - name: Run Golangci lint
         uses: golangci/golangci-lint-action@v2
         with:
           version: latest
-          args: -E exportloopref,gofmt --timeout=30m
+          args: --print-resources-usage
 
       - name: Docker meta
         id: docker_meta
@@ -39,6 +39,6 @@ jobs:
           context: .
           file: ./Dockerfile
           push: false
-          platforms: linux/amd64,linux/arm,linux/arm64
+          platforms: linux/amd64,linux/arm64
           tags: ${{ steps.docker_meta.outputs.tags }}
           labels: ${{ steps.docker_meta.outputs.labels }}

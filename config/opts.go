@@ -2,6 +2,7 @@ package config
 
 import (
 	"encoding/json"
+	"time"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -36,8 +37,10 @@ type (
 
 		// server settings
 		Server struct {
-			Bind    string `long:"server.bind"     env:"SERVER_BIND"     description:"Server address, eg. ':8080' (/healthz and /metrics for prometheus)" default:""`
-			Metrics bool   `long:"server.metrics"  env:"SERVER_METRICS"  description:"Enable prometheus metrics (do not use senstive informations in commands -> use environment variables or files for storing these informations)"`
+			Bind         string        `long:"server.bind"              env:"SERVER_BIND"     description:"Server address, eg. ':8080' (/healthz and /metrics for prometheus)" default:""`
+			ReadTimeout  time.Duration `long:"server.timeout.read"      env:"SERVER_TIMEOUT_READ"   description:"Server read timeout"   default:"5s"`
+			WriteTimeout time.Duration `long:"server.timeout.write"     env:"SERVER_TIMEOUT_WRITE"  description:"Server write timeout"  default:"10s"`
+			Metrics      bool          `long:"server.metrics"           env:"SERVER_METRICS"  description:"Enable prometheus metrics (do not use senstive informations in commands -> use environment variables or files for storing these informations)"`
 		}
 	}
 )
