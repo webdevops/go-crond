@@ -24,17 +24,6 @@ func fileGetAbsolutePath(path string) (string, os.FileInfo) {
 	return ret, f
 }
 
-func checkIfFileExists(path string) bool {
-	f, err := os.Stat(path)
-
-	// check if path exists
-	if err != nil {
-		return false
-	}
-
-	return (!f.IsDir()) && f.Mode().IsRegular()
-}
-
 func checkIfDirectoryExists(path string) bool {
 	f, err := os.Stat(path)
 
