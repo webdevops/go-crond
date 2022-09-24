@@ -35,7 +35,7 @@ build:
 
 .PHONY: image
 image: image
-	docker build -t $(PROJECT_NAME):$(GIT_TAG) .
+	docker build -t $(PROJECT_NAME):$(GIT_TAG) -f Dockerfile.alpine .
 
 .PHONY: build-push-development
 build-push-development:
