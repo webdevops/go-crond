@@ -288,7 +288,7 @@ func includeSystemDefaults() []CrontabEntry {
 	if checkIfFileExistsAndOwnedByRoot("/etc/redhat-release") {
 		log.Infof(" --> detected RedHat family, using distribution defaults")
 
-		if checkIfFileExists("/etc/crontabs") {
+		if checkIfFileExistsAndOwnedByRoot("/etc/crontabs") {
 			ret = append(ret, includePathForCrontabs("/etc/crontabs", CRONTAB_TYPE_SYSTEM)...)
 		}
 
@@ -301,8 +301,8 @@ func includeSystemDefaults() []CrontabEntry {
 	if checkIfFileExistsAndOwnedByRoot("/etc/SuSE-release") {
 		log.Infof(" --> detected SuSE family, using distribution defaults")
 
-		if checkIfFileExists("/etc/crontab") {
-			ret = append(ret, includePathForCrontabs("/etc/crontab", CRONTAB_TYPE_SYSTEM)...)
+		if checkIfFileExistsAndOwnedByRoot("/etc/crontab") {
+			ret = append(ret, parseCrontab("/etc/crontab", CRONTAB_TYPE_SYSTEM)...)
 		}
 
 		systemDetected = true
@@ -314,8 +314,8 @@ func includeSystemDefaults() []CrontabEntry {
 	if checkIfFileExistsAndOwnedByRoot("/etc/debian_version") {
 		log.Infof(" --> detected Debian family, using distribution defaults")
 
-		if checkIfFileExists("/etc/crontab") {
-			ret = append(ret, includePathForCrontabs("/etc/crontab", CRONTAB_TYPE_SYSTEM)...)
+		if checkIfFileExistsAndOwnedByRoot("/etc/crontab") {
+			ret = append(ret, parseCrontab("/etc/crontab", CRONTAB_TYPE_SYSTEM)...)
 		}
 
 		systemDetected = true
@@ -325,11 +325,11 @@ func includeSystemDefaults() []CrontabEntry {
 	// General
 	// ----------------------
 	if !systemDetected {
-		if checkIfFileExists("/etc/crontab") {
+		if checkIfFileExistsAndOwnedByRoot("/etc/crontab") {
 			ret = append(ret, includePathForCrontabs("/etc/crontab", CRONTAB_TYPE_SYSTEM)...)
 		}
 
-		if checkIfFileExists("/etc/crontabs") {
+		if checkIfFileExistsAndOwnedByRoot("/etc/crontabs") {
 			ret = append(ret, includePathForCrontabs("/etc/crontabs", CRONTAB_TYPE_SYSTEM)...)
 		}
 	}
