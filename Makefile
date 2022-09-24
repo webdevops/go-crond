@@ -1,51 +1,104 @@
-SOURCE = $(wildcard *.go)
-
-.PHONY: all build clean image check vendor dependencies
-
-NAME				:= go-crond
+PROJECT_NAME		:= $(shell basename $(CURDIR))
 GIT_TAG				:= $(shell git describe --dirty --tags --always)
 GIT_COMMIT			:= $(shell git rev-parse --short HEAD)
-LDFLAGS             := -X "main.gitTag=$(GIT_TAG)" -X "main.gitCommit=$(GIT_COMMIT)" -extldflags "-static"
+LDFLAGS				:= -X "main.gitTag=$(GIT_TAG)" -X "main.gitCommit=$(GIT_COMMIT)" -extldflags "-static" -s -w
 
-PKGS				:= $(shell go list ./... | grep -v -E '/vendor/|/test')
-FIRST_GOPATH		:= $(firstword $(subst :, ,$(shell go env GOPATH)))
-GOLANGCI_LINT_BIN	:= $(FIRST_GOPATH)/bin/golangci-lint
+FIRST_GOPATH			:= $(firstword $(subst :, ,$(shell go env GOPATH)))
+GOLANGCI_LINT_BIN		:= $(FIRST_GOPATH)/bin/golangci-lint
 
-GOBUILD_OSX = go build --ldflags '-w ${LDFLAGS}'
-GOBUILD_DYNAMIC = go build --ldflags '\''-w ${LDFLAGS}'\''
-GOBUILD_STATIC = go build --ldflags '\''-w ${LDFLAGS}'\''
-.PHONY: docker docker-dev docker-run-dev all build test clean release dependencies
+.PHONY: all
+all: vendor build
 
+.PHONY: clean
+clean:
+	git clean -Xfd .
 
-all: docker-dev lint build
+#######################################
+# builds
+#######################################
 
-build-local:
-	CGO_ENABLED=0 go build -a -ldflags '$(LDFLAGS)' -o $(NAME) .
-
+.PHONY: vendor
 vendor:
 	go mod tidy
 	go mod vendor
 	go mod verify
 
+.PHONY: build-all
+build-all:
+	GOOS=linux   GOARCH=${GOARCH} CGO_ENABLED=0 go build -ldflags '$(LDFLAGS)' -o '$(PROJECT_NAME)' .
+	GOOS=darwin  GOARCH=${GOARCH} CGO_ENABLED=0 go build -ldflags '$(LDFLAGS)' -o '$(PROJECT_NAME).darwin' .
+	GOOS=windows GOARCH=${GOARCH} CGO_ENABLED=0 go build -ldflags '$(LDFLAGS)' -o '$(PROJECT_NAME).exe' .
+
+.PHONY: build
+build:
+	GOOS=${GOOS} GOARCH=${GOARCH} CGO_ENABLED=0 go build -ldflags '$(LDFLAGS)' -o $(PROJECT_NAME) .
+
+.PHONY: image
+image: image
+	docker build -t $(PROJECT_NAME):$(GIT_TAG) -f Dockerfile.alpine .
+
+.PHONY: build-push-development
+build-push-development:
+	docker buildx create --use
+	docker buildx build -t webdevops/$(PROJECT_NAME):development --platform linux/amd64,linux/arm,linux/arm64 --push .
+
+#######################################
+# quality checks
+#######################################
+
+.PHONY: check
+check: vendor lint test
+
+.PHONY: test
+test:
+	time go test ./...
+
 .PHONY: lint
 lint: $(GOLANGCI_LINT_BIN)
-	# megacheck fails to respect build flags, causing compilation failure during linting.
-	# instead, use the unused, gosimple, and staticcheck linters directly
-	$(GOLANGCI_LINT_BIN) run -D megacheck -E unused,gosimple,staticcheck --timeout=10m
+	time $(GOLANGCI_LINT_BIN) run --verbose --print-resources-usage
 
 $(GOLANGCI_LINT_BIN):
-	curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s -- -b $(FIRST_GOPATH)/bin v1.23.8
+	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(FIRST_GOPATH)/bin
 
-ALL = \
-	$(foreach arch,64 32,\
-	$(foreach suffix,linux osx,\
-		build/go-crond-$(arch)-$(suffix))) \
-	$(foreach arch,arm arm64,\
-		build/go-crond-$(arch)-linux)
+#######################################
+# release assets
+#######################################
 
+RELEASE_ASSETS = \
+	$(foreach GOARCH,amd64 arm64 arm,\
+	$(foreach GOOS,linux darwin,\
+		release-assets/$(GOOS).$(GOARCH))) \
 
-docker:
-	docker build . -t webdevops/go-crond -f Dockerfile.alpine
+word-dot = $(word $2,$(subst ., ,$1))
+
+.PHONY: release-assets
+release-assets: clean-release-assets vendor $(RELEASE_ASSETS)
+
+.PHONY: clean-release-assets
+clean-release-assets:
+	rm -rf ./release-assets
+	mkdir -p ./release-assets
+
+release-assets/windows.%: $(SOURCE)
+	echo 'build release-assets for windows/$(call word-dot,$*,2)'
+	GOOS=windows \
+ 	GOARCH=$(call word-dot,$*,1) \
+	CGO_ENABLED=0 \
+	time go build -ldflags '$(LDFLAGS)' -o './release-assets/$(PROJECT_NAME).windows.$(call word-dot,$*,1).exe' .
+
+release-assets/%: $(SOURCE)
+	echo 'build release-assets for $(call word-dot,$*,1)/$(call word-dot,$*,2)'
+	GOOS=$(call word-dot,$*,1) \
+ 	GOARCH=$(call word-dot,$*,2) \
+	CGO_ENABLED=0 \
+	time go build -ldflags '$(LDFLAGS)' -o './release-assets/$(PROJECT_NAME).$(call word-dot,$*,1).$(call word-dot,$*,2)' .
+
+release-assets/darwin.arm:
+	echo "not supported"
+
+#######################################
+# development
+#######################################
 
 docker-dev:
 	docker build -f Dockerfile.develop . -t webdevops/go-crond:develop
@@ -54,62 +107,4 @@ docker-run: docker-dev
 	docker run -ti --rm -w "$$(pwd)" -v "$$(pwd):$$(pwd):ro" -p 8080:8080 -e SERVER_METRICS=1 --name=cron webdevops/go-crond:develop bash
 
 build-env: docker-dev
-	docker run -ti --rm -w "$$(pwd)" -v "$$(pwd):$$(pwd)" -p 8080:8080 --name=cron webdevops/go-crond:develop bash
-
-all: test build
-
-dependencies:
-	go mod vendor
-
-build: clean dependencies test $(ALL)
-
-# cram is a python app, so 'easy_install/pip install cram' to run tests
-test:
-	echo test todo
-	#cram tests/main.test
-
-clean:
-	rm -rf build/
-
-# os is determined as thus: if variable of suffix exists, it's taken, if not, then
-# suffix itself is taken
-osx = darwin
-
-build/go-crond-64-osx: $(SOURCE)
-	@mkdir -p $(@D)
-	CGO_ENABLED=1 GOOS=$(firstword $($*) $*) GOARCH=amd64 $(GOBUILD_OSX) -ldflags '$(LDFLAGS)' -o $@
-
-build/go-crond-32-osx: $(SOURCE)
-	echo "32-osx disabled"
-
-build/go-crond-64-linux: $(SOURCE)
-	@mkdir -p $(@D)
-	docker run -ti --rm -w "$$(pwd)" -v "$$(pwd):$$(pwd)" --name=cron webdevops/go-crond:develop sh -c 'CGO_ENABLED=0 GOOS=$(firstword $($*) $*) GOARCH=amd64 $(GOBUILD_DYNAMIC) -o ${@}-dynamic'
-	docker run -ti --rm -w "$$(pwd)" -v "$$(pwd):$$(pwd)" --name=cron webdevops/go-crond:develop sh -c 'CGO_ENABLED=0 GOOS=$(firstword $($*) $*) GOARCH=amd64 $(GOBUILD_STATIC) -o ${@}'
-
-build/go-crond-32-linux: $(SOURCE)
-	@mkdir -p $(@D)
-	docker run -ti --rm -w "$$(pwd)" -v "$$(pwd):$$(pwd)" --name=cron webdevops/go-crond:develop sh -c 'CGO_ENABLED=0 GOOS=$(firstword $($*) $*) GOARCH=386 $(GOBUILD_DYNAMIC) -o ${@}-dynamic'
-	docker run -ti --rm -w "$$(pwd)" -v "$$(pwd):$$(pwd)" --name=cron webdevops/go-crond:develop sh -c 'CGO_ENABLED=0 GOOS=$(firstword $($*) $*) GOARCH=386 $(GOBUILD_STATIC) -o ${@}'
-
-build/go-crond-arm-linux: $(SOURCE)
-	@mkdir -p $(@D)
-	docker run -ti --rm -w "$$(pwd)" -v "$$(pwd):$$(pwd)" --name=cron webdevops/go-crond:develop sh -c 'CC=arm-linux-gnueabi-gcc CGO_ENABLED=1 GOOS=linux GOARCH=arm GOARM=6 $(GOBUILD_DYNAMIC) -o ${@}-dynamic'
-	docker run -ti --rm -w "$$(pwd)" -v "$$(pwd):$$(pwd)" --name=cron webdevops/go-crond:develop sh -c 'CC=arm-linux-gnueabi-gcc CGO_ENABLED=1 GOOS=linux GOARCH=arm GOARM=6 $(GOBUILD_STATIC) -o ${@}'
-
-build/go-crond-arm64-linux: $(SOURCE)
-	@mkdir -p $(@D)
-	docker run -ti --rm -w "$$(pwd)" -v "$$(pwd):$$(pwd)" --name=cron webdevops/go-crond:develop sh -c 'CC=aarch64-linux-gnu-gcc CGO_ENABLED=1 GOOS=linux GOARCH=arm64 $(GOBUILD_STATIC) -o ${@}'
-	docker run -ti --rm -w "$$(pwd)" -v "$$(pwd):$$(pwd)" --name=cron webdevops/go-crond:develop sh -c 'CC=aarch64-linux-gnu-gcc CGO_ENABLED=1 GOOS=linux GOARCH=arm64 $(GOBUILD_DYNAMIC) -o ${@}-dynamic'
-
-
-release:
-	github-release release -u webdevops -r go-crond -t "$(GIT_TAG)" -n "$(GIT_TAG)" --description "$(GIT_TAG)"
-	@for x in build/*; do \
-		echo "Uploading $$x" && \
-		github-release upload -u webdevops \
-                              -r go-crond \
-                              -t $(GIT_TAG) \
-                              -f "$$x" \
-                              -n "$$(basename $$x)"; \
-	done
+	docker run -ti --rm -w "$$(pwd)" -v "$$(pwd):$$(pwd)" -p 8080:8080 -e SERVER_METRICS=1 --name=cron webdevops/go-crond:develop bash
