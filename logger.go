@@ -9,5 +9,6 @@ func LogCronjobToFields(cronjob CrontabEntry) log.Fields {
 		"spec":    cronjob.Spec,
 		"user":    cronjob.User,
 		"command": cronjob.Command,
+		"crontab": cronjob.CrontabPath,
 	}
 }

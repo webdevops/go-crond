@@ -2,8 +2,9 @@
 
 SHELL=/bin/bash
 
-* * * * * root sleep 5 && id >> /tmp/test-1
-* * * * * root sleep 5 && id >> /tmp/test-2
+# m h  dom mon dow user command
+  * *   *  *   *   root sleep 5 && id >> /tmp/test-1
+  * *   *  *   *   root sleep 5 && id >> /tmp/test-2
 @every 1m guest id >> /tmp/test-3
 @every 1m guest env >> /tmp/test-4
 @every 5s guest env >> /tmp/test-5

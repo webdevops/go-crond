@@ -167,15 +167,10 @@ func parseCrontab(path string, username string) []CrontabEntry {
 	var parser *Parser
 	var err error
 
-	file, err := os.Open(path)
-	if err != nil {
-		log.Fatalf("crontab path: %v err:%v", path, err)
-	}
-
 	if username == CRONTAB_TYPE_SYSTEM {
-		parser, err = NewCronjobSystemParser(file)
+		parser, err = NewCronjobSystemParser(path)
 	} else {
-		parser, err = NewCronjobUserParser(file, username)
+		parser, err = NewCronjobUserParser(path, username)
 	}
 
 	if err != nil {

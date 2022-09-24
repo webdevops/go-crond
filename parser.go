@@ -3,9 +3,11 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"io"
+	"os"
 	"regexp"
 	"strings"
+
+	log "github.com/sirupsen/logrus"
 )
 
 const (
@@ -27,24 +29,25 @@ var (
 )
 
 type CrontabEntry struct {
-	Spec    string
-	User    string
-	Command string
-	Env     []string
-	Shell   string
+	Spec        string
+	User        string
+	Command     string
+	Env         []string
+	Shell       string
+	CrontabPath string
 }
 
 type Parser struct {
 	cronLineRegex   *regexp.Regexp
-	reader          io.Reader
 	cronjobUsername string
+	path            string
 }
 
 // Create new crontab parser (user crontab without user specification)
-func NewCronjobUserParser(reader io.Reader, username string) (*Parser, error) {
+func NewCronjobUserParser(path string, username string) (*Parser, error) {
 	p := &Parser{
 		cronLineRegex:   cronjobUserRegex,
-		reader:          reader,
+		path:            path,
 		cronjobUsername: username,
 	}
 
@@ -52,10 +55,10 @@ func NewCronjobUserParser(reader io.Reader, username string) (*Parser, error) {
 }
 
 // Create new crontab parser (crontab with user specification)
-func NewCronjobSystemParser(reader io.Reader) (*Parser, error) {
+func NewCronjobSystemParser(path string) (*Parser, error) {
 	p := &Parser{
 		cronLineRegex:   cronjobSystemRegex,
-		reader:          reader,
+		path:            path,
 		cronjobUsername: CRONTAB_TYPE_SYSTEM,
 	}
 
@@ -71,17 +74,25 @@ func (p *Parser) Parse() []CrontabEntry {
 
 // Parse lines from crontab
 func (p *Parser) parseLines() []CrontabEntry {
-	var entries []CrontabEntry
-	var crontabSpec string
-	var crontabUser string
-	var crontabCommand string
-	var environment []string
+	var (
+		entries        []CrontabEntry
+		crontabSpec    string
+		crontabUser    string
+		crontabCommand string
+		environment    []string
+	)
+
+	reader, err := os.Open(p.path)
+	if err != nil {
+		log.Fatalf("crontab path: %v err:%v", p.path, err)
+	}
+	defer reader.Close()
 
 	shell := DEFAULT_SHELL
 
 	specCleanupRegexp := regexp.MustCompile(`\s+`)
 
-	scanner := bufio.NewScanner(p.reader)
+	scanner := bufio.NewScanner(reader)
 	for scanner.Scan() {
 		line := strings.TrimSpace(scanner.Text())
 
@@ -122,7 +133,17 @@ func (p *Parser) parseLines() []CrontabEntry {
 			// shrink white spaces for better handling
 			crontabSpec = specCleanupRegexp.ReplaceAllString(crontabSpec, " ")
 
-			entries = append(entries, CrontabEntry{Spec: crontabSpec, User: crontabUser, Command: crontabCommand, Env: environment, Shell: shell})
+			entries = append(
+				entries,
+				CrontabEntry{
+					Spec:        crontabSpec,
+					User:        crontabUser,
+					Command:     crontabCommand,
+					Env:         environment,
+					Shell:       shell,
+					CrontabPath: p.path,
+				},
+			)
 		}
 	}
 

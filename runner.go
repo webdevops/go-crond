@@ -1,12 +1,10 @@
 package main
 
 import (
-	"fmt"
 	"os"
 	"os/exec"
 	"os/user"
 	"strconv"
-	"strings"
 	"syscall"
 	"time"
 
@@ -21,19 +19,20 @@ type Runner struct {
 
 func NewRunner() *Runner {
 	r := &Runner{
-		cron: cron.New(),
+		cron: cron.New(
+			cron.WithParser(
+				cron.NewParser(
+					cron.Minute | cron.Hour | cron.Dom | cron.Month | cron.Dow | cron.Descriptor,
+				),
+			),
+		),
 	}
 	return r
 }
 
 // Add crontab entry
 func (r *Runner) Add(cronjob CrontabEntry) error {
-	cronSpec := cronjob.Spec
-	if !strings.HasPrefix(cronjob.Spec, "@") {
-		cronSpec = fmt.Sprintf("0 %s", cronjob.Spec)
-	}
-
-	_, err := r.cron.AddFunc(cronSpec, r.cmdFunc(cronjob, func(execCmd *exec.Cmd) bool {
+	_, err := r.cron.AddFunc(cronjob.Spec, r.cmdFunc(cronjob, func(execCmd *exec.Cmd) bool {
 		// before exec callback
 		log.WithFields(LogCronjobToFields(cronjob)).Infof("executing")
 		return true
@@ -52,13 +51,7 @@ func (r *Runner) Add(cronjob CrontabEntry) error {
 
 // Add crontab entry with user
 func (r *Runner) AddWithUser(cronjob CrontabEntry) error {
-
-	cronSpec := cronjob.Spec
-	if !strings.HasPrefix(cronjob.Spec, "@") {
-		cronSpec = fmt.Sprintf("0 %s", cronjob.Spec)
-	}
-
-	_, err := r.cron.AddFunc(cronSpec, r.cmdFunc(cronjob, func(execCmd *exec.Cmd) bool {
+	_, err := r.cron.AddFunc(cronjob.Spec, r.cmdFunc(cronjob, func(execCmd *exec.Cmd) bool {
 		// before exec callback
 		log.WithFields(LogCronjobToFields(cronjob)).Debugf("executing")
 
