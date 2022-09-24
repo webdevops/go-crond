@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
-	"github.com/robfig/cron"
+	cron "github.com/robfig/cron/v3"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -33,7 +33,7 @@ func (r *Runner) Add(cronjob CrontabEntry) error {
 		cronSpec = fmt.Sprintf("0 %s", cronjob.Spec)
 	}
 
-	err := r.cron.AddFunc(cronSpec, r.cmdFunc(cronjob, func(execCmd *exec.Cmd) bool {
+	_, err := r.cron.AddFunc(cronSpec, r.cmdFunc(cronjob, func(execCmd *exec.Cmd) bool {
 		// before exec callback
 		log.WithFields(LogCronjobToFields(cronjob)).Infof("executing")
 		return true
@@ -58,7 +58,7 @@ func (r *Runner) AddWithUser(cronjob CrontabEntry) error {
 		cronSpec = fmt.Sprintf("0 %s", cronjob.Spec)
 	}
 
-	err := r.cron.AddFunc(cronSpec, r.cmdFunc(cronjob, func(execCmd *exec.Cmd) bool {
+	_, err := r.cron.AddFunc(cronSpec, r.cmdFunc(cronjob, func(execCmd *exec.Cmd) bool {
 		// before exec callback
 		log.WithFields(LogCronjobToFields(cronjob)).Debugf("executing")
 

@@ -34,7 +34,7 @@ RUN mkdir -p \
     && echo '# m h dom mon dow user	command' >> /etc/crontab \
     && echo '17 *	* * *	root    cd / && run-parts --report /etc/cron.hourly' >> /etc/crontab \
     && echo '25 6	* * *	root	test -x /usr/sbin/anacron || ( cd / && run-parts --report /etc/cron.daily )' >> /etc/crontab \
-    && echo '47 6	* * 7	root	test -x /usr/sbin/anacron || ( cd / && run-parts --report /etc/cron.weekly )' >> /etc/crontab \
+    && echo '47 6	* * 6	root	test -x /usr/sbin/anacron || ( cd / && run-parts --report /etc/cron.weekly )' >> /etc/crontab \
     && echo '52 6	1 * *	root	test -x /usr/sbin/anacron || ( cd / && run-parts --report /etc/cron.monthly )' >> /etc/crontab \
     && echo '* *	* * *	root	date' >> /etc/crontab \
     && echo '' >> /etc/crontab
