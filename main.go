@@ -74,9 +74,13 @@ func initArgParser() {
 		log.SetLevel(log.DebugLevel)
 	}
 
-	// verbose level
+	// JSON formatter
 	if opts.Log.Json {
 		log.SetFormatter(&log.JSONFormatter{})
+	} else {
+		log.SetFormatter(&log.TextFormatter{
+			DisableQuote: true,
+		})
 	}
 }
 
