@@ -466,6 +466,6 @@ func registerRunnerShutdown(runner *Runner) {
 		runner.Stop()
 
 		log.Infof("terminated")
-		os.Exit(1)
+		os.Exit(0)
 	}()
 }
