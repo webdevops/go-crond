@@ -14,7 +14,8 @@ import (
 )
 
 type Runner struct {
-	cron *cron.Cron
+	cron     *cron.Cron
+	cronjobs map[cron.EntryID]*CrontabEntry
 }
 
 func NewRunner() *Runner {
@@ -26,13 +27,14 @@ func NewRunner() *Runner {
 				),
 			),
 		),
+		cronjobs: map[cron.EntryID]*CrontabEntry{},
 	}
 	return r
 }
 
 // Add crontab entry
 func (r *Runner) Add(cronjob CrontabEntry) error {
-	_, err := r.cron.AddFunc(cronjob.Spec, r.cmdFunc(cronjob, func(execCmd *exec.Cmd) bool {
+	eid, err := r.cron.AddFunc(cronjob.Spec, r.cmdFunc(&cronjob, func(execCmd *exec.Cmd) bool {
 		// before exec callback
 		log.WithFields(LogCronjobToFields(cronjob)).Infof("executing")
 		return true
@@ -42,6 +44,8 @@ func (r *Runner) Add(cronjob CrontabEntry) error {
 		prometheusMetricTask.With(r.cronjobToPrometheusLabels(cronjob)).Set(0)
 		log.WithFields(LogCronjobToFields(cronjob)).Errorf("cronjob failed adding:%v", err)
 	} else {
+		cronjob.SetEntryId(eid)
+		r.cronjobs[eid] = &cronjob
 		prometheusMetricTask.With(r.cronjobToPrometheusLabels(cronjob)).Set(1)
 		log.WithFields(LogCronjobToFields(cronjob)).Infof("cronjob added")
 	}
@@ -51,7 +55,7 @@ func (r *Runner) Add(cronjob CrontabEntry) error {
 
 // Add crontab entry with user
 func (r *Runner) AddWithUser(cronjob CrontabEntry) error {
-	_, err := r.cron.AddFunc(cronjob.Spec, r.cmdFunc(cronjob, func(execCmd *exec.Cmd) bool {
+	eid, err := r.cron.AddFunc(cronjob.Spec, r.cmdFunc(&cronjob, func(execCmd *exec.Cmd) bool {
 		// before exec callback
 		log.WithFields(LogCronjobToFields(cronjob)).Debugf("executing")
 
@@ -86,6 +90,8 @@ func (r *Runner) AddWithUser(cronjob CrontabEntry) error {
 		prometheusMetricTask.With(r.cronjobToPrometheusLabels(cronjob)).Set(0)
 		log.WithFields(LogCronjobToFields(cronjob)).Errorf("cronjob failed adding: %v", err)
 	} else {
+		cronjob.SetEntryId(eid)
+		r.cronjobs[eid] = &cronjob
 		prometheusMetricTask.With(r.cronjobToPrometheusLabels(cronjob)).Set(1)
 		log.WithFields(LogCronjobToFields(cronjob)).Infof("cronjob added")
 	}
@@ -102,6 +108,7 @@ func (r *Runner) Len() int {
 func (r *Runner) Start() {
 	log.Infof("start runner with %d jobs\n", r.Len())
 	r.cron.Start()
+	r.initAllCronEntryMetrics()
 }
 
 // Stop runner
@@ -111,7 +118,7 @@ func (r *Runner) Stop() {
 }
 
 // Execute crontab command
-func (r *Runner) cmdFunc(cronjob CrontabEntry, cmdCallback func(*exec.Cmd) bool) func() {
+func (r *Runner) cmdFunc(cronjob *CrontabEntry, cmdCallback func(*exec.Cmd) bool) func() {
 	cmdFunc := func() {
 		// fall back to normal shell if not specified
 		taskShell := cronjob.Shell
@@ -137,25 +144,27 @@ func (r *Runner) cmdFunc(cronjob CrontabEntry, cmdCallback func(*exec.Cmd) bool)
 
 			elapsed := time.Since(start)
 
-			prometheusMetricTaskRunDuration.With(r.cronjobToPrometheusLabels(cronjob)).Set(elapsed.Seconds())
-			prometheusMetricTaskRunTime.With(r.cronjobToPrometheusLabels(cronjob)).SetToCurrentTime()
+			cronjobMetricCommonLables := r.cronjobToPrometheusLabels(*cronjob)
+			prometheusMetricTaskRunDuration.With(cronjobMetricCommonLables).Set(elapsed.Seconds())
+			prometheusMetricTaskRunTime.With(cronjobMetricCommonLables).SetToCurrentTime()
 
-			logFields := LogCronjobToFields(cronjob)
+			logFields := LogCronjobToFields(*cronjob)
 			logFields["elapsed_s"] = elapsed.Seconds()
 			if execCmd.ProcessState != nil {
 				logFields["exitCode"] = execCmd.ProcessState.ExitCode()
 			}
 
 			if err != nil {
-				prometheusMetricTaskRunCount.With(r.cronjobToPrometheusLabels(cronjob, prometheus.Labels{"result": "error"})).Inc()
-				prometheusMetricTaskRunResult.With(r.cronjobToPrometheusLabels(cronjob)).Set(0)
+				prometheusMetricTaskRunCount.With(r.cronjobToPrometheusLabels(*cronjob, prometheus.Labels{"result": "error"})).Inc()
+				prometheusMetricTaskRunResult.With(cronjobMetricCommonLables).Set(0)
 				logFields["result"] = "error"
 			} else {
-				prometheusMetricTaskRunCount.With(r.cronjobToPrometheusLabels(cronjob, prometheus.Labels{"result": "success"})).Inc()
-				prometheusMetricTaskRunResult.With(r.cronjobToPrometheusLabels(cronjob)).Set(1)
+				prometheusMetricTaskRunCount.With(r.cronjobToPrometheusLabels(*cronjob, prometheus.Labels{"result": "success"})).Inc()
+				prometheusMetricTaskRunResult.With(cronjobMetricCommonLables).Set(1)
 				logFields["result"] = "success"
 			}
 
+			r.updateCronEntryMetrics(cronjob)
 			log.WithFields(logFields).Info("finished")
 			if len(cmdStdout) > 0 {
 				log.Debugln(string(cmdStdout))
@@ -177,4 +186,27 @@ func (r *Runner) cronjobToPrometheusLabels(cronjob CrontabEntry, additionalLabel
 		}
 	}
 	return
+}
+
+func (r *Runner) updateCronEntryMetrics(cronjob *CrontabEntry) {
+	cronjobMetricCommonLables := r.cronjobToPrometheusLabels(*cronjob)
+	entry := r.cron.Entry(cronjob.EntryId)
+
+	if entry.Next.IsZero() {
+		prometheusMetricTaskRunNextTs.With(cronjobMetricCommonLables).Set(0)
+	} else {
+		prometheusMetricTaskRunNextTs.With(cronjobMetricCommonLables).Set(float64(entry.Next.Unix()))
+	}
+
+	if entry.Prev.IsZero() {
+		prometheusMetricTaskRunPrevTs.With(cronjobMetricCommonLables).Set(0)
+	} else {
+		prometheusMetricTaskRunPrevTs.With(cronjobMetricCommonLables).Set(float64(entry.Prev.Unix()))
+	}
+}
+
+func (r *Runner) initAllCronEntryMetrics() {
+	for _, cronjob := range r.cronjobs {
+		r.updateCronEntryMetrics(cronjob)
+	}
 }
