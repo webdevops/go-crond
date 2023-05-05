@@ -171,3 +171,5 @@ logstashPipeline:
       }
       ...
 ```
+##Grafana
+![Image alt](https://github.com/promzeus/go-crond/master/grafana-dashboard/go-crond.png)
