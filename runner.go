@@ -34,7 +34,7 @@ func NewRunner() *Runner {
 func (r *Runner) Add(cronjob CrontabEntry) error {
 	_, err := r.cron.AddFunc(cronjob.Spec, r.cmdFunc(cronjob, func(execCmd *exec.Cmd) bool {
 		// before exec callback
-		log.WithFields(LogCronjobToFields(cronjob)).Infof("executing")
+		// log.WithFields(LogCronjobToFields(cronjob)).Infof("executing")
 		return true
 	}))
 
@@ -53,7 +53,7 @@ func (r *Runner) Add(cronjob CrontabEntry) error {
 func (r *Runner) AddWithUser(cronjob CrontabEntry) error {
 	_, err := r.cron.AddFunc(cronjob.Spec, r.cmdFunc(cronjob, func(execCmd *exec.Cmd) bool {
 		// before exec callback
-		log.WithFields(LogCronjobToFields(cronjob)).Debugf("executing")
+		// log.WithFields(LogCronjobToFields(cronjob)).Debugf("executing")
 
 		// lookup username
 		u, err := user.Lookup(cronjob.User)
@@ -142,8 +142,15 @@ func (r *Runner) cmdFunc(cronjob CrontabEntry, cmdCallback func(*exec.Cmd) bool)
 
 			logFields := LogCronjobToFields(cronjob)
 			logFields["elapsed_s"] = elapsed.Seconds()
+			logFields["started_at"] = start.Format(time.RFC3339)
+
 			if execCmd.ProcessState != nil {
 				logFields["exitCode"] = execCmd.ProcessState.ExitCode()
+			}
+
+			// add pid to log fields
+			if execCmd.Process != nil {
+				logFields["pid"] = execCmd.Process.Pid
 			}
 
 			if err != nil {
@@ -156,9 +163,11 @@ func (r *Runner) cmdFunc(cronjob CrontabEntry, cmdCallback func(*exec.Cmd) bool)
 				logFields["result"] = "success"
 			}
 
-			log.WithFields(logFields).Info("finished")
+			// log.WithFields(logFields).Info("finished")
 			if len(cmdStdout) > 0 {
-				log.Debugln(string(cmdStdout))
+				log.WithFields(logFields).Info(string(cmdStdout))
+			} else {
+				log.WithFields(logFields).Info("Command has finished executing without any output to stdout.")
 			}
 		}
 	}
