@@ -7,6 +7,8 @@ var (
 	prometheusMetricTaskRunCount    *prometheus.CounterVec
 	prometheusMetricTaskRunResult   *prometheus.GaugeVec
 	prometheusMetricTaskRunTime     *prometheus.GaugeVec
+	prometheusMetricTaskRunPrevTs   *prometheus.GaugeVec
+	prometheusMetricTaskRunNextTs   *prometheus.GaugeVec
 	prometheusMetricTaskRunDuration *prometheus.GaugeVec
 )
 
@@ -55,6 +57,24 @@ func initMetrics() {
 		[]string{"cronSpec", "cronUser", "cronCommand"},
 	)
 	prometheus.MustRegister(prometheusMetricTaskRunDuration)
+
+	prometheusMetricTaskRunNextTs = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "gocrond_task_run_next_time",
+			Help: "gocrond task next run ts",
+		},
+		[]string{"cronSpec", "cronUser", "cronCommand"},
+	)
+	prometheus.MustRegister(prometheusMetricTaskRunNextTs)
+
+	prometheusMetricTaskRunPrevTs = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "gocrond_task_run_prev_time",
+			Help: "gocrond task prev run ts",
+		},
+		[]string{"cronSpec", "cronUser", "cronCommand"},
+	)
+	prometheus.MustRegister(prometheusMetricTaskRunPrevTs)
 }
 
 func resetMetrics() {
@@ -63,4 +83,6 @@ func resetMetrics() {
 	prometheusMetricTaskRunResult.Reset()
 	prometheusMetricTaskRunTime.Reset()
 	prometheusMetricTaskRunDuration.Reset()
+	prometheusMetricTaskRunNextTs.Reset()
+	prometheusMetricTaskRunPrevTs.Reset()
 }

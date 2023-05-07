@@ -7,6 +7,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/robfig/cron/v3"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -35,6 +36,7 @@ type CrontabEntry struct {
 	Env         []string
 	Shell       string
 	CrontabPath string
+	EntryId     cron.EntryID
 }
 
 type Parser struct {
@@ -63,6 +65,10 @@ func NewCronjobSystemParser(path string) (*Parser, error) {
 	}
 
 	return p, nil
+}
+
+func (e *CrontabEntry) SetEntryId(eid cron.EntryID) {
+	(*e).EntryId = eid
 }
 
 // Parse crontab
