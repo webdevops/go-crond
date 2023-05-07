@@ -32,6 +32,7 @@ type CrontabEntry struct {
 	Spec        string
 	User        string
 	Command     string
+	Pid         int
 	Env         []string
 	Shell       string
 	CrontabPath string

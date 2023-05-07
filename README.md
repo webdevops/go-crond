@@ -139,3 +139,37 @@ go-crond exposes [Prometheus][] metrics on `:8080/metrics` if enabled.
 | `gocrond_task_run_duration` | Duration of last exec                           |
 
 [Prometheus]: https://prometheus.io/
+
+##jsonlog in ElasticSearch
+##Logstash
+
+An example of our production filter for logstash
+```
+logstashPipeline:
+  logstash.conf: |
+    input {
+      beats {
+        port => "5044"
+      }
+    }
+    filter {
+      json {
+        skip_on_invalid_json => true
+        source => "message"
+        target => "json-data"
+        add_tag => [ "_message_json_parsed" ]
+      }
+      if [kubernetes][container][name] =~ ".*-cron" {
+        mutate {
+          rename => { "[json-data][level]" => "[json-data][level_name]" }
+          gsub => [ "[json-data][msg]", "\\\\n", "\n" ]
+          remove_field => [ "message" ]
+        }
+        date {
+          match => [ "[json-data][started_at]", "ISO8601" ]
+        }
+      }
+      ...
+```
+##Grafana
+![Image alt](https://raw.githubusercontent.com/promzeus/go-crond/master/grafana-dashboard/go-crond.png)
