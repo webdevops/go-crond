@@ -28,9 +28,32 @@ COPY --from=build /go/src/github.com/webdevops/go-crond/go-crond .
 RUN ["./go-crond", "--help"]
 
 #############################################
-# FINAL IMAGE
+# Final alpine
 #############################################
-FROM debian:stable-slim
+FROM alpine as final-alpine
+ENV SERVER_BIND=":8080" \
+    SERVER_METRICS="1" \
+    LOG_JSON="1"
+WORKDIR /
+COPY --from=test /app /usr/local/bin
+EXPOSE 8080
+ENTRYPOINT ["go-crond"]
+
+#############################################
+# FINAL debian
+#############################################
+FROM debian:stable-slim as final-debian
+ENV SERVER_BIND=":8080" \
+    SERVER_METRICS="1" \
+    LOG_JSON="1"
+COPY --from=test /app /usr/local/bin
+EXPOSE 8080
+ENTRYPOINT ["go-crond"]
+
+#############################################
+# FINAL ubuntu
+#############################################
+FROM ubuntu:latest as final-ubuntu
 ENV SERVER_BIND=":8080" \
     SERVER_METRICS="1" \
     LOG_JSON="1"
