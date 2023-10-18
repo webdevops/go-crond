@@ -53,7 +53,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Set Swap Space
-        uses: pierotofy/set-swap-space@master
+        uses: pierotofy/set-swap-space@49819abfb41bd9b44fb781159c033dba90353a7c
         with:
           swap-size-gb: 12
 
