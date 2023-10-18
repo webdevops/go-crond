@@ -1,6 +1,6 @@
 module github.com/webdevops/go-crond
 
-go 1.20
+go 1.21
 
 require (
 	github.com/jessevdk/go-flags v1.5.0
