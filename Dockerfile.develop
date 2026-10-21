@@ -1,4 +1,4 @@
-FROM golang:1.20-buster
+FROM golang:1.27-bookworm
 
 # Install tools
 RUN apt-get update \
@@ -10,7 +10,7 @@ RUN apt-get update \
         git \
         file \
     && apt-get install -y -f \
-        gcc-8-arm-linux-gnueabi \
+        gcc-arm-linux-gnueabi \
         gcc-arm-none-eabi \
         gcc-arm-linux-gnueabi \
         binutils-arm-linux-gnueabi \
