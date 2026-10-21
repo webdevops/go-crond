@@ -4,25 +4,34 @@ on:
   release:
     types: [created]
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  RELEASE_TAG: ${{ github.ref_name }}
+
 jobs:
-  release:
+  build:
+    name: "${{ matrix.task }}"
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - task: release-assets
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - name: Set Swap Space
-        uses: pierotofy/set-swap-space@49819abfb41bd9b44fb781159c033dba90353a7c
-        with:
-          swap-size-gb: 12
+      - name: Setup runner
+        uses: ./.github/actions/setup-runner
 
-      - uses: actions/setup-go@v5
-        with:
-          go-version: '1.21'
-          check-latest: true
+      - name: Setup go
+        uses: ./.github/actions/setup-go
 
       - name: Build
         run: |
-          make release-assets
+          make "${{ matrix.task }}"
 
       - name: Upload assets to release
         uses: svenstaro/upload-release-action@v2
@@ -32,3 +41,4 @@ jobs:
           tag: ${{ github.ref }}
           overwrite: true
           file_glob: true
+          promote: false
